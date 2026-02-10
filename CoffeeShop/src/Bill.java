@@ -6,8 +6,8 @@ public class Bill {
         this.customer = customer;
     }
 
-    private Customer customer;
-    private List<Order> Orders;
+    public Customer customer;
+    public List<Order> Orders;
 
     public void addOrder(Order order) {
         Orders.add(order);

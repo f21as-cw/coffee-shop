@@ -24,12 +24,39 @@ public class CoffeeShopManager {
         }
     }
 
-    public void CreateNewOrder(Item item, Customer customer){
+    public List<Order> GetCustomerOrders(Customer customer) throws Exception {
+        if (!CustomerData.containsKey(customer))
+            throw new Exception("Customer does not Exist");
+
+        return CustomerData.get(customer).Orders;
+
+    }
+
+    public void CreateNewOrder(Item item, Customer customer) throws Exception {
 
         if (!CustomerData.containsKey(customer))
-            CustomerData.put(customer, new Bill(customer));
+            throw new Exception("Customer does not Exist");
 
         Bill customerBill = CustomerData.get(customer);
-        customerBill.addOrder(item);
+
+        Order newOrder = new Order(item, customer);
+        customerBill.addOrder(newOrder);
+
     }
+
+    public void RemoveOrder(Order order) {
+
+    }
+
+    public void CreateCustomer(){
+        Customer newCustomer = new Customer();
+        Bill newBill = new Bill(newCustomer);
+        CustomerData.put(newCustomer, newBill);
+    }
+
+    public void RemoveCustomer(Customer customer){
+        CustomerData.remove(customer);
+    }
+
+
 }
