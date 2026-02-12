@@ -12,7 +12,31 @@ import java.util.LinkedList;
 
 public class DiscountX4XTest {
 	@Test
-	public void testDiscountEval241NoItem() {
+	public void testDiscountEval041() {
+		Item item = new Item(1.0f);
+		assertThrows(
+				InvalidDiscountException.class,
+				() -> new DiscountX4X(item, 0, 1));
+	}
+
+	@Test
+	public void testDiscountEval140() {
+		Item item = new Item(1.0f);
+		assertThrows(
+				InvalidDiscountException.class,
+				() -> new DiscountX4X(item, 1, 0));
+	}
+
+	@Test
+	public void testDiscountEval142() {
+		Item item = new Item(1.0f);
+		assertThrows(
+				InvalidDiscountException.class,
+				() -> new DiscountX4X(item, 1, 2));
+	}
+
+	@Test
+	public void testDiscountEval241NoItem() throws InvalidDiscountException {
 		Item item = new Item(1.0f);
 		IDiscount two4one = new DiscountX4X(item, 2, 1);
 		LinkedList<Order> orders = new LinkedList<>();
@@ -26,7 +50,7 @@ public class DiscountX4XTest {
 	}
 
 	@Test
-	public void testDiscountEval241OneItem() {
+	public void testDiscountEval241OneItem() throws InvalidDiscountException {
 		Item item = new Item(1.0f);
 		IDiscount two4one = new DiscountX4X(item, 2, 1);
 		Customer customer = new Customer();
@@ -43,7 +67,7 @@ public class DiscountX4XTest {
 	}
 
 	@Test
-	public void testDiscountEval241DifferentItem() {
+	public void testDiscountEval241DifferentItem() throws InvalidDiscountException {
 		Item item = new Item(1.0f);
 		IDiscount two4one = new DiscountX4X(item, 2, 1);
 		Customer customer = new Customer();
@@ -61,7 +85,7 @@ public class DiscountX4XTest {
 	}
 
 	@Test
-	public void testDiscountEval241TwoItems() {
+	public void testDiscountEval241TwoItems() throws InvalidDiscountException {
 		Item item = new Item(1.0f);
 		IDiscount two4one = new DiscountX4X(item, 2, 1);
 		Customer customer = new Customer();
@@ -79,7 +103,7 @@ public class DiscountX4XTest {
 	}
 
 	@Test
-	public void testDiscountEval241ThreeItems() {
+	public void testDiscountEval241ThreeItems() throws InvalidDiscountException {
 		Item item = new Item(1.0f);
 		IDiscount two4one = new DiscountX4X(item, 2, 1);
 		Customer customer = new Customer();
@@ -98,7 +122,7 @@ public class DiscountX4XTest {
 	}
 
 	@Test
-	public void testDiscountEval342ThreeItems() {
+	public void testDiscountEval342ThreeItems() throws InvalidDiscountException {
 		Item item = new Item(1.0f);
 		IDiscount two4one = new DiscountX4X(item, 3, 2);
 		Customer customer = new Customer();
