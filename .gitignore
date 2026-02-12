@@ -1,1 +1,13 @@
-out
+# Build
+target
+
+# Eclipse
+.classpath
+.project
+.settings
+
+# IntelliJ
+*.iml
+
+# VS Code
+.vscode/
