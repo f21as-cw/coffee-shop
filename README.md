@@ -12,9 +12,14 @@ mvn compile
 mvn exec:java
 ```
 
+### Coverage
+
+```bash
+open target/site/jacoco/index.html
+```
+
 ## Testing
 
 ```bash
 mvn test
 ```
-
