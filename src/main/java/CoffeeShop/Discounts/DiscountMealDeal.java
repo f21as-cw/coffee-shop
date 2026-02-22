@@ -1,16 +1,18 @@
 package CoffeeShop.Discounts;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
+import CoffeeShop.Items.Item;
 import CoffeeShop.Order;
-import CoffeeShop.Items.IItem;
 
 public class DiscountMealDeal implements IDiscount {
-	ArrayList<IItem> _items;
+	ArrayList<Item> _items;
 	float _cost;
 
-	public DiscountMealDeal(ArrayList<IItem> items, float cost) throws InvalidDiscountException {
+	public DiscountMealDeal(ArrayList<Item> items, float cost) throws InvalidDiscountException {
 		if (items.size() == 0) {
 			throw new InvalidDiscountException(String
 					.format("Expected size of list to be greater than 0, got %d", items.size()));
@@ -38,32 +40,66 @@ public class DiscountMealDeal implements IDiscount {
 	// .sum()
 	// discount = (initialCost - _cost) * count
 	@Override
-	public float DiscountEval(LinkedList<Order> orders) {
-		ArrayList<Integer> counts = new ArrayList<Integer>(_items.size());
-		for (int i = 0; i < _items.size(); i++) {
-			counts.add(0);
-		}
+	public DiscountsData DiscountEval(List<Order> orders) {
+		// 1. Map the orders by item for fast lookup
+		Map<Item, List<Order>> ordersByItem = orders.stream().collect(Collectors.groupingBy(Order::getItem));
 
-		for (int i = 0; i < _items.size(); i++) {
-			IItem item = _items.get(i);
-			for (Order o : orders) {
-				if (!o.getItem().getClass().isInstance(item))
-					continue;
-				counts.set(i, counts.get(i) + 1);
+		int bundleCount = _items.stream()
+				.mapToInt(item -> ordersByItem.getOrDefault(item, List.of()).size())
+				.min()
+				.orElse(0);
+
+		List<Order> usedOrders = new ArrayList<>();
+		float priceChange = 0.0f;
+
+		if (bundleCount > 0) {
+			for (Item bundleItem : _items) {
+				List<Order> matchingOrders = ordersByItem.get(bundleItem);
+				usedOrders.addAll(matchingOrders.subList(0, bundleCount));
 			}
+
+			float initialCost = (float) _items.stream().mapToDouble(Item::getCost).sum();
+			priceChange = (initialCost - _cost) * bundleCount;
 		}
 
-		int count = counts.get(0);
-		for (Integer c : counts) {
-			count = c < count ? c : count;
-		}
+		return new DiscountsData(usedOrders, priceChange);
 
-		float initalCost = 0.0f;
-		for (IItem i : _items) {
-			initalCost += i.getCost();
-		}
 
-		float discount = (initalCost - _cost) * count;
-		return discount;
+//		ArrayList<Integer> counts = new ArrayList<Integer>(_items.size());
+//		for (int i = 0; i < _items.size(); i++) {
+//			counts.add(0);
+//		}
+//
+//		for (int i = 0; i < _items.size(); i++) {
+//			Item item = _items.get(i);
+//			for (Order o : orders) {
+//				if (!o.getItem().equals(item))
+//					continue;
+//				counts.set(i, counts.get(i) + 1);
+//			}
+//		}
+//
+//		int count = counts.get(0);
+//		for (Integer c : counts) {
+//			count = c < count ? c : count;
+//		}
+//
+//		float initalCost = 0.0f;
+//		for (Item i : _items) {
+//			initalCost += i.getCost();
+//		}
+//
+//		float discount = (initalCost - _cost) * count;
+//		return new DiscountsData(new ArrayList<>(), discount);
+	}
+
+	@Override
+	public String toString() {
+		String str = "";
+		for (Item item : _items) {
+			str += item.toString() + " + ";
+		}
+		str += " for " + _cost;
+		return str;
 	}
 }

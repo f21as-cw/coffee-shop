@@ -1,9 +1,12 @@
 package CoffeeShop.Discounts;
 
-import java.util.LinkedList;
+import java.util.List;
 
 import CoffeeShop.Order;
 
+;
 public interface IDiscount {
-	float DiscountEval(LinkedList<Order> orders);
+	record DiscountsData(List<Order> OrdersUsed, float CostChange){};
+	DiscountsData DiscountEval(List<Order> orders);
+
 }

@@ -1,15 +1,16 @@
 package CoffeeShop.Discounts;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.List;
 
+import CoffeeShop.Items.Item;
 import CoffeeShop.Order;
-import CoffeeShop.Items.IItem;
 
 public class DiscountPercentage implements IDiscount {
-	IItem _item;
+	Item _item;
 	float _percentage;
 
-	public DiscountPercentage(IItem item, float percentage) throws InvalidDiscountException {
+	public DiscountPercentage(Item item, float percentage) throws InvalidDiscountException {
 		if (percentage <= 0) {
 			throw new InvalidDiscountException(
 					String.format("Expected percentage to be greater than 0, instead got %f",
@@ -31,15 +32,20 @@ public class DiscountPercentage implements IDiscount {
 	// .size();
 	// discount = items * item.getCost() * percentage
 	@Override
-	public float DiscountEval(LinkedList<Order> orders) {
-		int items = 0;
+	public DiscountsData DiscountEval(List<Order> orders) {
+		List<Order> DiscountedOrders = new ArrayList<>();
+		float currentDiscount = 0;
 		for (Order order : orders) {
 			if (!order.getItem().equals(_item))
 				continue;
-			items++;
+			DiscountedOrders.add(order);
+			currentDiscount += order.getItem().getCost() * _percentage;
 		}
+		return new DiscountsData(DiscountedOrders, currentDiscount);
+	}
 
-		float discount = items * _item.getCost() * _percentage;
-		return discount;
+	@Override
+	public String toString() {
+		return _item.toString() + " -" + _percentage*100 + "% OFF";
 	}
 }

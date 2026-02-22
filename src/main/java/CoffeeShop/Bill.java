@@ -2,6 +2,8 @@ package CoffeeShop;
 
 import CoffeeShop.Discounts.IDiscount;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -26,17 +28,25 @@ public class Bill {
 	}
 
 	public float GetTotalCost(List<IDiscount> allDiscounts){
-		List<Order> tmpOrders = Orders;
-		List<IDiscount> DiscountsUsed = List.of();
+		List<Order> tmpOrders = new ArrayList<>(Orders);
+		List<IDiscount> DiscountsUsed = new ArrayList<>(allDiscounts);
 
 		float totalCost = GetCost();
 		for (IDiscount discount : allDiscounts) {
-			float costchange = discount.DiscountEval((LinkedList<Order>) tmpOrders);
-			if (costchange != 0){
-				DiscountsUsed.add(discount);
-				totalCost -= costchange;
+			System.out.println("Discount - " + discount.toString());
+			CoffeeShop.Discounts.IDiscount.DiscountsData Data = discount.DiscountEval(tmpOrders);
+			for (Order order : Data.OrdersUsed()) {
+				System.out.println("	Order " + order);
 			}
+			totalCost -= Data.CostChange();
+			System.out.println("		Cost Change - £" + Data.CostChange());
+
 		}
+
+		//TO remove floating point shenanigans
+		totalCost = BigDecimal.valueOf(totalCost)
+				.setScale(2, RoundingMode.HALF_UP)
+				.floatValue();
 		System.out.println("Final Cost : £" + totalCost);
 		return totalCost;
 	}

@@ -5,6 +5,7 @@ import CoffeeShop.Items.Item;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
@@ -39,8 +40,8 @@ public class CoffeeShopManager {
 
 	}
 
-	public void CreateCustomer() {
-		Customer newCustomer = new Customer();
+	public void CreateCustomer(String name) {
+		Customer newCustomer = new Customer(name, UUID.randomUUID());
 		Bill newBill = new Bill(newCustomer);
 		CustomerData.put(newCustomer, newBill);
 	}
