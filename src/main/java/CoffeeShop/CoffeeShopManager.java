@@ -34,6 +34,7 @@ public class CoffeeShopManager {
 
 	}
 
+	//TODO
 	public void RemoveOrder(Order order) {
 
 	}
@@ -46,6 +47,19 @@ public class CoffeeShopManager {
 
 	public void RemoveCustomer(Customer customer) {
 		CustomerData.remove(customer);
+	}
+
+	public void CloseoutCustomer(Customer customer, boolean Remove) throws Exception {
+		if (!CustomerData.containsKey(customer))
+			throw new Exception("Customer does not exist");
+
+		Bill bill = CustomerData.get(customer);
+
+		bill.GetTotalCost(AvaliableDiscounts);
+
+		if (Remove)
+			RemoveCustomer(customer);
+
 	}
 
 }
