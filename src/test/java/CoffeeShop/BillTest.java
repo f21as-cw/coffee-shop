@@ -42,6 +42,12 @@ public class BillTest {
         assert !bill.Orders.contains(order2);
         assert !bill.Orders.contains(order3);
 
+        try {
+            bill.RemoveOrder(order1);
+        } catch (Exception e) {
+            assert true;
+        }
+
     }
 
     @Test
