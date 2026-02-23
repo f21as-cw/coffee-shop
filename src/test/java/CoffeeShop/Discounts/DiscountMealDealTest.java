@@ -4,11 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import CoffeeShop.Order;
 import CoffeeShop.Customer;
-import CoffeeShop.Items.IItem;
-import CoffeeShop.Items.Item;
-import CoffeeShop.Items.ItemDrink;
-import CoffeeShop.Items.ItemMain;
-import CoffeeShop.Items.ItemSnack;
+import CoffeeShop.Item;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -18,7 +14,7 @@ import java.util.LinkedList;
 public class DiscountMealDealTest {
 	@Test
 	public void testDiscountMealDealNoItems() {
-		ArrayList<IItem> items = new ArrayList<IItem>();
+		ArrayList<Item> items = new ArrayList<Item>();
 		assertThrows(
 				InvalidDiscountException.class,
 				() -> new DiscountMealDeal(items, 1.0f));
@@ -26,8 +22,8 @@ public class DiscountMealDealTest {
 
 	@Test
 	public void testDiscountMealDealNoCost() {
-		ArrayList<IItem> items = new ArrayList<IItem>();
-		items.add(new Item(1.0f));
+		ArrayList<Item> items = new ArrayList<Item>();
+		items.add(new Item("MAIN-1", 1.0f));
 		assertThrows(
 				InvalidDiscountException.class,
 				() -> new DiscountMealDeal(items, 0.0f));
@@ -35,26 +31,27 @@ public class DiscountMealDealTest {
 
 	@Test
 	public void testDiscountEvalNoItem() throws InvalidDiscountException {
-		IItem main = new ItemMain(2.0f);
-		IItem snack = new ItemSnack(1.0f);
-		IItem drink = new ItemDrink(1.0f);
-		ArrayList<IItem> items = new ArrayList<IItem>();
+		Item main = new Item("MAIN-1", 2.0f);
+		Item snack = new Item("SNACK-1", 1.0f);
+		Item drink = new Item("DRINK-1", 1.0f);
+		ArrayList<Item> items = new ArrayList<Item>();
 		items.add(main);
 		items.add(snack);
 		items.add(drink);
 		IDiscount mealDeal = new DiscountMealDeal(items, 3.0f);
 		LinkedList<Order> orders = new LinkedList<>();
 
-		float discount = mealDeal.DiscountEval(orders);
-		assertEquals(0.0f, discount);
+		DiscountsData data = mealDeal.DiscountEval(orders);
+		assertEquals(0.0f, data.CostChange());
+		assertTrue(data.OrdersUsed().isEmpty());
 	}
 
 	@Test
 	public void testDiscountEvalOneItem() throws InvalidDiscountException {
-		IItem main = new ItemMain(2.0f);
-		IItem snack = new ItemSnack(1.0f);
-		IItem drink = new ItemDrink(1.0f);
-		ArrayList<IItem> items = new ArrayList<IItem>();
+		Item main = new Item("MAIN-1", 2.0f);
+		Item snack = new Item("SNACK-1", 1.0f);
+		Item drink = new Item("DRINK-1", 1.0f);
+		ArrayList<Item> items = new ArrayList<Item>();
 		items.add(main);
 		items.add(snack);
 		items.add(drink);
@@ -63,16 +60,17 @@ public class DiscountMealDealTest {
 		LinkedList<Order> orders = new LinkedList<>();
 		orders.push(new Order(main, customer));
 
-		float discount = mealDeal.DiscountEval(orders);
-		assertEquals(0.0f, discount);
+		DiscountsData data = mealDeal.DiscountEval(orders);
+		assertEquals(0.0f, data.CostChange());
+		assertTrue(data.OrdersUsed().isEmpty());
 	}
 
 	@Test
 	public void testDiscountEvalTwoItems() throws InvalidDiscountException {
-		IItem main = new ItemMain(2.0f);
-		IItem snack = new ItemSnack(1.0f);
-		IItem drink = new ItemDrink(1.0f);
-		ArrayList<IItem> items = new ArrayList<IItem>();
+		Item main = new Item("MAIN-1", 2.0f);
+		Item snack = new Item("SNACK-1", 1.0f);
+		Item drink = new Item("DRINK-1", 1.0f);
+		ArrayList<Item> items = new ArrayList<Item>();
 		items.add(main);
 		items.add(snack);
 		items.add(drink);
@@ -82,47 +80,56 @@ public class DiscountMealDealTest {
 		orders.push(new Order(main, customer));
 		orders.push(new Order(snack, customer));
 
-		float discount = mealDeal.DiscountEval(orders);
-		assertEquals(0.0f, discount);
+		DiscountsData data = mealDeal.DiscountEval(orders);
+		assertEquals(0.0f, data.CostChange());
+		assertTrue(data.OrdersUsed().isEmpty());
 	}
 
 	@Test
 	public void testDiscountEvalThreeItems() throws InvalidDiscountException {
-		IItem main = new ItemMain(2.0f);
-		IItem snack = new ItemSnack(1.0f);
-		IItem drink = new ItemDrink(1.0f);
-		ArrayList<IItem> items = new ArrayList<IItem>();
+		Item main = new Item("MAIN-1", 2.0f);
+		Item snack = new Item("SNACK-1", 1.0f);
+		Item drink = new Item("DRINK-1", 1.0f);
+		ArrayList<Item> items = new ArrayList<Item>();
 		items.add(main);
 		items.add(snack);
 		items.add(drink);
 		IDiscount mealDeal = new DiscountMealDeal(items, 3.0f);
 		Customer customer = new Customer();
 		LinkedList<Order> orders = new LinkedList<>();
-		orders.push(new Order(main, customer));
-		orders.push(new Order(snack, customer));
-		orders.push(new Order(drink, customer));
+		Order mainOrder = new Order(main, customer);
+		Order snackOrder = new Order(snack, customer);
+		Order drinkOrder = new Order(drink, customer);
+		orders.push(mainOrder);
+		orders.push(snackOrder);
+		orders.push(drinkOrder);
 
-		float discount = mealDeal.DiscountEval(orders);
-		assertEquals(1.0f, discount);
+		DiscountsData data = mealDeal.DiscountEval(orders);
+		assertEquals(1.0f, data.CostChange());
+		assertEquals(3, data.OrdersUsed().size());
+		assertTrue(data.OrdersUsed().contains(mainOrder));
+		assertTrue(data.OrdersUsed().contains(snackOrder));
+		assertTrue(data.OrdersUsed().contains(drinkOrder));
 	}
 
 	@Test
-	public void testDiscountEvalOtherItem() throws InvalidDiscountException {
-		IItem main = new ItemMain(2.0f);
-		IItem snack = new ItemSnack(1.0f);
-		IItem drink = new ItemDrink(1.0f);
-		ArrayList<IItem> items = new ArrayList<IItem>();
+	public void testDiscountEvalItem() throws InvalidDiscountException {
+		Item main = new Item("MAIN-1", 2.0f);
+		Item snack = new Item("SNACK-1", 1.0f);
+		Item drink = new Item("DRINK-1", 1.0f);
+		ArrayList<Item> items = new ArrayList<Item>();
 		items.add(main);
 		items.add(snack);
 		items.add(drink);
 		IDiscount mealDeal = new DiscountMealDeal(items, 3.0f);
 		Customer customer = new Customer();
 		LinkedList<Order> orders = new LinkedList<>();
-		orders.push(new Order(new OtherItem(1.0f), customer));
-		orders.push(new Order(new OtherItem(1.0f), customer));
-		orders.push(new Order(new OtherItem(1.0f), customer));
+		orders.push(new Order(new Item("MAIN-2", 1.0f), customer));
+		orders.push(new Order(new Item("SNACK-2", 1.0f), customer));
+		orders.push(new Order(new Item("DRINK-2", 1.0f), customer));
 
-		float discount = mealDeal.DiscountEval(orders);
-		assertEquals(0.0f, discount);
+		DiscountsData data = mealDeal.DiscountEval(orders);
+		assertEquals(0.0f, data.CostChange());
+		assertTrue(data.OrdersUsed().isEmpty());
 	}
 }

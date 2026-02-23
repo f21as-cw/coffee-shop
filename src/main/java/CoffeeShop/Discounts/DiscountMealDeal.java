@@ -1,16 +1,18 @@
 package CoffeeShop.Discounts;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
+import CoffeeShop.Item;
 import CoffeeShop.Order;
-import CoffeeShop.Items.IItem;
 
 public class DiscountMealDeal implements IDiscount {
-	ArrayList<IItem> _items;
+	List<Item> _items;
 	float _cost;
 
-	public DiscountMealDeal(ArrayList<IItem> items, float cost) throws InvalidDiscountException {
+	public DiscountMealDeal(List<Item> items, float cost) throws InvalidDiscountException {
 		if (items.size() == 0) {
 			throw new InvalidDiscountException(String
 					.format("Expected size of list to be greater than 0, got %d", items.size()));
@@ -38,32 +40,40 @@ public class DiscountMealDeal implements IDiscount {
 	// .sum()
 	// discount = (initialCost - _cost) * count
 	@Override
-	public float DiscountEval(LinkedList<Order> orders) {
-		ArrayList<Integer> counts = new ArrayList<Integer>(_items.size());
-		for (int i = 0; i < _items.size(); i++) {
-			counts.add(0);
+	public DiscountsData DiscountEval(List<Order> orders) {
+		Map<Item, List<Order>> item2Orders = new HashMap<Item, List<Order>>();
+		for (Item item : _items) {
+			item2Orders.put(item, new LinkedList<Order>());
 		}
 
-		for (int i = 0; i < _items.size(); i++) {
-			IItem item = _items.get(i);
-			for (Order o : orders) {
-				if (!o.getItem().getClass().isInstance(item))
+		for (Order order : orders) {
+			for (Item item : _items) {
+				if (!order.getItem().equals(item))
 					continue;
-				counts.set(i, counts.get(i) + 1);
+				item2Orders.get(item).add(order);
 			}
 		}
 
-		int count = counts.get(0);
-		for (Integer c : counts) {
-			count = c < count ? c : count;
+		int count = item2Orders.get(_items.get(0)).size();
+		for (int i = 1; i < _items.size(); i++) {
+			int amount = item2Orders.get(_items.get(i)).size();
+			count = count < amount ? count : amount;
+		}
+
+		List<Order> used = new LinkedList<Order>();
+		for (List<Order> order : item2Orders.values()) {
+			for (int i = 0; i < count; i++) {
+				used.add(order.get(i));
+			}
 		}
 
 		float initalCost = 0.0f;
-		for (IItem i : _items) {
+		for (Item i : _items) {
 			initalCost += i.getCost();
 		}
 
 		float discount = (initalCost - _cost) * count;
-		return discount;
+
+		return new DiscountsData(used, discount);
 	}
 }

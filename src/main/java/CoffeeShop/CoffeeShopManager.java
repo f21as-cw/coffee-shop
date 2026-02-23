@@ -1,7 +1,6 @@
 package CoffeeShop;
 
 import CoffeeShop.Discounts.IDiscount;
-import CoffeeShop.Items.Item;
 
 import java.util.List;
 import java.util.Map;
