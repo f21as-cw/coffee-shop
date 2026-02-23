@@ -16,13 +16,13 @@ abstract class ASaveLoader<T> implements ISaveLoader<T> {
 		this._fileWriter = new FileWriter(writePath);
 	}
 
-	protected List<String> ReadFile() throws SavingException {
+	protected List<String> ReadFile() throws LoadingException {
 
 		BufferedReader reader = new BufferedReader(this._fileReader);
 		List<String> lines = reader.lines().toList();
 
 		if (lines.size() <= 0) {
-			throw new SavingException("No lines were written to file");
+			throw new LoadingException("No lines were loaded from file");
 		}
 
 		return lines;
