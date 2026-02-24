@@ -1,5 +1,7 @@
 package CoffeeShop;
 
+import CoffeeShop.Items.Item;
+
 public class Order {
 	Item _item;
 	Customer _customer;
@@ -15,5 +17,10 @@ public class Order {
 
 	public void setItem(Item item) {
 		_item = item;
+	}
+
+	@Override
+	public String toString() {
+		return _item + ":" + _customer.name;
 	}
 }
