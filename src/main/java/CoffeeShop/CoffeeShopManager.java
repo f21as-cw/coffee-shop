@@ -2,15 +2,49 @@ package CoffeeShop;
 
 import CoffeeShop.Discounts.IDiscount;
 import CoffeeShop.Exceptions.CustomerNotFoundException;
+import CoffeeShop.SaveLoader.ISaveLoader;
+import CoffeeShop.SaveLoader.SaveLoaderItems;
+import CoffeeShop.SaveLoader.SaveLoaderOrders;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 public class CoffeeShopManager {
 	public Map<Customer, Bill> CustomerData;
-	private SaveLoader Saveloader;
 	private List<Item> AvaliableItems;
 	private List<IDiscount> AvaliableDiscounts;
+
+	private SaveLoaderOrders saveLoaderOrders;
+	private SaveLoaderItems saveLoaderItems;
+
+
+
+	public static void main(String[] args) {
+
+	}
+
+	//TODO once the save loader is complete
+	public void Startup(){
+//		try {
+//			Properties prop = new Properties();
+//			try (InputStream input = new FileInputStream("Config.properties")){
+//				prop.load(input);
+//
+//				String OrderPath = prop.getProperty("OrderPath");
+//				String ItemPath = prop.getProperty("ItemPath");
+//
+//				saveLoaderOrders = new SaveLoaderOrders(OrderPath, OrderPath, );
+//				saveLoaderItems = new SaveLoaderItems();
+//			}
+//
+//		}catch (IOException e){
+//			throw new RuntimeException("Unable to open file");
+//		}
+	}
 
 	public List<Order> GetCustomerOrder(Customer customer) {
 		if (!CustomerData.containsKey(customer))

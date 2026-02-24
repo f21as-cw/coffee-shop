@@ -1,13 +1,13 @@
 package CoffeeShop.SaveLoader;
 
+import CoffeeShop.Item;
+
 import java.io.IOException;
 import java.util.List;
 
-import CoffeeShop.Items.*;;
-
 public class SaveLoaderItems extends ASaveLoader<Item> {
 
-	SaveLoaderItems(String readPath, String writePath) throws IOException {
+	public SaveLoaderItems(String readPath, String writePath) throws IOException {
 		super(readPath, writePath);
 	}
 

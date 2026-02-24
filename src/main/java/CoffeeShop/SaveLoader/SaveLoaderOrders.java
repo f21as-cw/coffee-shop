@@ -11,7 +11,7 @@ public class SaveLoaderOrders extends ASaveLoader<Order> {
 
 	List<Customer> _customers;
 
-	SaveLoaderOrders(String readPath, String writePath, List<Customer> customers) throws IOException {
+	public SaveLoaderOrders(String readPath, String writePath, List<Customer> customers) throws IOException {
 		super(readPath, writePath);
 
 		this._customers = customers;
