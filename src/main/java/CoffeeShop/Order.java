@@ -1,21 +1,24 @@
 package CoffeeShop;
 
-import CoffeeShop.Items.IItem;
-
 public class Order {
-	IItem _item;
+	Item _item;
 	Customer _customer;
 
-	public Order(IItem item, Customer customer) {
+	public Order(Item item, Customer customer) {
 		_item = item;
 		_customer = customer;
 	}
 
-	public IItem getItem() {
+	public Item getItem() {
 		return _item;
 	}
 
-	public void setItem(IItem item) {
+	public void setItem(Item item) {
 		_item = item;
+	}
+
+	@Override
+	public String toString() {
+		return _item + ":" + _customer.name;
 	}
 }

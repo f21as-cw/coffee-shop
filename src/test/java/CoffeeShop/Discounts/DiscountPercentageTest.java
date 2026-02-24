@@ -1,20 +1,27 @@
 package CoffeeShop.Discounts;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import CoffeeShop.Order;
 import CoffeeShop.Customer;
-import CoffeeShop.Items.IItem;
-import CoffeeShop.Items.Item;
+import CoffeeShop.Item;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.LinkedList;
 
 public class DiscountPercentageTest {
+
+	private Customer customer;
+	@BeforeEach
+	void setup(){
+		customer = new Customer("JohnSmith");
+	}
+
 	@Test
 	public void testDiscountPercentage0() {
-		IItem item = new Item(1.0f);
+		Item item = new Item("MAIN-1", 1.0f);
 		assertThrows(
 				InvalidDiscountException.class,
 				() -> new DiscountPercentage(item, 0.0f));
@@ -22,7 +29,7 @@ public class DiscountPercentageTest {
 
 	@Test
 	public void testDiscountPercentage1() {
-		IItem item = new Item(1.0f);
+		Item item = new Item("MAIN-1", 1.0f);
 		assertThrows(
 				InvalidDiscountException.class,
 				() -> new DiscountPercentage(item, 1.0f));
@@ -30,52 +37,57 @@ public class DiscountPercentageTest {
 
 	@Test
 	public void testDiscountEvalNoItem() throws InvalidDiscountException {
-		IItem item = new Item(1.0f);
+		Item item = new Item("MAIN-1", 1.0f);
 		IDiscount fifty = new DiscountPercentage(item, 0.5f);
 		LinkedList<Order> orders = new LinkedList<>();
 
-		float discount = fifty.DiscountEval(orders);
-		assertEquals(0.0f, discount);
+		DiscountsData data = fifty.DiscountEval(orders);
+		assertEquals(0.0f, data.CostChange());
+		assertTrue(data.OrdersUsed().isEmpty());
 	}
 
 	@Test
 	public void testDiscountEvalOneItem() throws InvalidDiscountException {
-		IItem item = new Item(1.0f);
+		Item item = new Item("MAIN-1", 1.0f);
 		IDiscount fifty = new DiscountPercentage(item, 0.5f);
-		Customer customer = new Customer();
 		Order order = new Order(item, customer);
 		LinkedList<Order> orders = new LinkedList<>();
 		orders.push(order);
 
-		float discount = fifty.DiscountEval(orders);
-		assertEquals(item.getCost() * 0.5f, discount);
+		DiscountsData data = fifty.DiscountEval(orders);
+		assertEquals(item.getCost() * 0.5f, data.CostChange());
+		assertEquals(1, data.OrdersUsed().size());
+		assertTrue(data.OrdersUsed().contains(order));
 	}
 
 	@Test
 	public void testDiscountEvalTwoItems() throws InvalidDiscountException {
-		IItem item = new Item(1.0f);
+		Item item = new Item("MAIN-1", 1.0f);
 		IDiscount fifty = new DiscountPercentage(item, 0.5f);
-		Customer customer = new Customer();
 		Order order = new Order(item, customer);
+		Order otherOrder = new Order(item, customer);
 		LinkedList<Order> orders = new LinkedList<>();
 		orders.push(order);
-		orders.push(order);
+		orders.push(otherOrder);
 
-		float discount = fifty.DiscountEval(orders);
-		assertEquals(item.getCost(), discount);
+		DiscountsData data = fifty.DiscountEval(orders);
+		assertEquals(item.getCost(), data.CostChange());
+		assertEquals(2, data.OrdersUsed().size());
+		assertTrue(data.OrdersUsed().contains(order));
+		assertTrue(data.OrdersUsed().contains(otherOrder));
 	}
 
 	@Test
 	public void testDiscountEvalOtherItem() throws InvalidDiscountException {
-		IItem item = new Item(1.0f);
+		Item item = new Item("MAIN-1", 1.0f);
 		IDiscount fifty = new DiscountPercentage(item, 0.5f);
-		Customer customer = new Customer();
-		IItem other = new Item(2.0f);
+		Item other = new Item("MAIN-2", 2.0f);
 		Order order = new Order(other, customer);
 		LinkedList<Order> orders = new LinkedList<>();
 		orders.push(order);
 
-		float discount = fifty.DiscountEval(orders);
-		assertEquals(0.0f, discount);
+		DiscountsData data = fifty.DiscountEval(orders);
+		assertEquals(0.0f, data.CostChange());
+		assertTrue(data.OrdersUsed().isEmpty());
 	}
 }
