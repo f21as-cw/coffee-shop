@@ -1,5 +1,7 @@
 package CoffeeShop;
 
+import CoffeeShop.Exceptions.InvalidItemFormatException;
+
 import java.util.Objects;
 
 public class Item {
@@ -10,12 +12,22 @@ public class Item {
 	String _IconPath;
 	String _ID;
 
-	public Item(String ID, float cost) {
-		_cost = cost;
-		String[] parts = ID.split("-");
-		_category = Category.valueOf(parts[0]);
-		_IDNum = Integer.parseInt(parts[1]);
-		_ID = ID;
+	public Item(String id, float cost) {
+		this._cost = cost;
+
+		if (id == null || !id.contains("-")) {
+			throw new InvalidItemFormatException("ID must contain a hyphen: " + id);
+		}
+
+		try {
+			String[] parts = id.split("-");
+			this._category = Category.valueOf(parts[0].toUpperCase());
+			this._IDNum = Integer.parseInt(parts[1]);
+			this._ID = id;
+
+		} catch (IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
+			throw new InvalidItemFormatException("Invalid ID format or Category: " + id, e);
+		}
 	}
 
 	public String getID() {
@@ -55,3 +67,4 @@ enum Category {
 	SNACK,
 	TEST
 }
+

@@ -1,31 +1,29 @@
 package CoffeeShop;
 
 import CoffeeShop.Discounts.IDiscount;
+import CoffeeShop.Exceptions.CustomerNotFoundException;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class CoffeeShopManager {
 	public Map<Customer, Bill> CustomerData;
 	private SaveLoader Saveloader;
 	private List<Item> AvaliableItems;
 	private List<IDiscount> AvaliableDiscounts;
 
-	public List<Order> GetCustomerOrders(Customer customer) throws Exception {
+	public List<Order> GetCustomerOrder(Customer customer) {
 		if (!CustomerData.containsKey(customer))
-			throw new Exception("Customer does not Exist");
+			throw new CustomerNotFoundException("Customer not found");
 
 		return CustomerData.get(customer).Orders;
 
 	}
 
-	public void CreateNewOrder(Item item, Customer customer) throws Exception {
+	public void CreateNewOrder(Item item, Customer customer) {
 
 		if (!CustomerData.containsKey(customer))
-			throw new Exception("Customer does not Exist");
+			throw new CustomerNotFoundException("Customer not found");
 
 		Bill customerBill = CustomerData.get(customer);
 
@@ -36,6 +34,9 @@ public class CoffeeShopManager {
 
 	//TODO
 	public void RemoveOrder(Order order) {
+		if (!CustomerData.containsKey(order._customer))
+			throw new CustomerNotFoundException("Customer not Found");
+		CustomerData.get(order._customer).RemoveOrder(order);
 
 	}
 
@@ -46,6 +47,8 @@ public class CoffeeShopManager {
 	}
 
 	public void RemoveCustomer(Customer customer) {
+		if (!CustomerData.containsKey(customer))
+			throw new CustomerNotFoundException("Customer not Found");
 		CustomerData.remove(customer);
 	}
 
