@@ -40,7 +40,7 @@ public class CoffeeShopManager {
 	}
 
 	public void CreateCustomer(String name) {
-		Customer newCustomer = new Customer(name, UUID.randomUUID());
+		Customer newCustomer = new Customer(name);
 		Bill newBill = new Bill(newCustomer);
 		CustomerData.put(newCustomer, newBill);
 	}

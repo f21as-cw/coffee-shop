@@ -1,7 +1,6 @@
 package CoffeeShop;
 
 import CoffeeShop.Discounts.*;
-import CoffeeShop.Items.Item;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +15,7 @@ public class BillTest {
 
     @BeforeEach
     void setupCustomer(){
-        _Customer = new Customer("JohnSmith", UUID.randomUUID());
+        _Customer = new Customer("JohnSmith");
     }
 
     @Test

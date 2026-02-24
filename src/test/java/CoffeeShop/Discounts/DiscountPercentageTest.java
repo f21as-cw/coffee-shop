@@ -1,5 +1,6 @@
 package CoffeeShop.Discounts;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import CoffeeShop.Order;
@@ -11,6 +12,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.LinkedList;
 
 public class DiscountPercentageTest {
+
+	private Customer customer;
+	@BeforeEach
+	void setup(){
+		customer = new Customer("JohnSmith");
+	}
+
 	@Test
 	public void testDiscountPercentage0() {
 		Item item = new Item("MAIN-1", 1.0f);
@@ -42,7 +50,6 @@ public class DiscountPercentageTest {
 	public void testDiscountEvalOneItem() throws InvalidDiscountException {
 		Item item = new Item("MAIN-1", 1.0f);
 		IDiscount fifty = new DiscountPercentage(item, 0.5f);
-		Customer customer = new Customer();
 		Order order = new Order(item, customer);
 		LinkedList<Order> orders = new LinkedList<>();
 		orders.push(order);
@@ -57,7 +64,6 @@ public class DiscountPercentageTest {
 	public void testDiscountEvalTwoItems() throws InvalidDiscountException {
 		Item item = new Item("MAIN-1", 1.0f);
 		IDiscount fifty = new DiscountPercentage(item, 0.5f);
-		Customer customer = new Customer();
 		Order order = new Order(item, customer);
 		Order otherOrder = new Order(item, customer);
 		LinkedList<Order> orders = new LinkedList<>();
@@ -75,7 +81,6 @@ public class DiscountPercentageTest {
 	public void testDiscountEvalOtherItem() throws InvalidDiscountException {
 		Item item = new Item("MAIN-1", 1.0f);
 		IDiscount fifty = new DiscountPercentage(item, 0.5f);
-		Customer customer = new Customer();
 		Item other = new Item("MAIN-2", 2.0f);
 		Order order = new Order(other, customer);
 		LinkedList<Order> orders = new LinkedList<>();

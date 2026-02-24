@@ -6,9 +6,9 @@ public class Customer {
     public final String name;
 	public final UUID id;
 
-    public Customer(String name, UUID id) {
+    public Customer(String name) {
         this.name = name;
-        this.id = id;
+        this.id = UUID.randomUUID();
     }
 
 	@Override

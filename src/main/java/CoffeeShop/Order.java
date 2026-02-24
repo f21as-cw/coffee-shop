@@ -1,7 +1,5 @@
 package CoffeeShop;
 
-import CoffeeShop.Items.Item;
-
 public class Order {
 	Item _item;
 	Customer _customer;

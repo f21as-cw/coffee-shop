@@ -1,5 +1,6 @@
 package CoffeeShop.Discounts;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import CoffeeShop.Order;
@@ -12,6 +13,12 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 
 public class DiscountMealDealTest {
+	private Customer customer;
+	@BeforeEach
+	void setup(){
+		customer = new Customer("JohnSmith");
+	}
+
 	@Test
 	public void testDiscountMealDealNoItems() {
 		ArrayList<Item> items = new ArrayList<Item>();
@@ -56,7 +63,6 @@ public class DiscountMealDealTest {
 		items.add(snack);
 		items.add(drink);
 		IDiscount mealDeal = new DiscountMealDeal(items, 3.0f);
-		Customer customer = new Customer();
 		LinkedList<Order> orders = new LinkedList<>();
 		orders.push(new Order(main, customer));
 
@@ -75,7 +81,6 @@ public class DiscountMealDealTest {
 		items.add(snack);
 		items.add(drink);
 		IDiscount mealDeal = new DiscountMealDeal(items, 3.0f);
-		Customer customer = new Customer();
 		LinkedList<Order> orders = new LinkedList<>();
 		orders.push(new Order(main, customer));
 		orders.push(new Order(snack, customer));
@@ -95,7 +100,6 @@ public class DiscountMealDealTest {
 		items.add(snack);
 		items.add(drink);
 		IDiscount mealDeal = new DiscountMealDeal(items, 3.0f);
-		Customer customer = new Customer();
 		LinkedList<Order> orders = new LinkedList<>();
 		Order mainOrder = new Order(main, customer);
 		Order snackOrder = new Order(snack, customer);
@@ -122,7 +126,6 @@ public class DiscountMealDealTest {
 		items.add(snack);
 		items.add(drink);
 		IDiscount mealDeal = new DiscountMealDeal(items, 3.0f);
-		Customer customer = new Customer();
 		LinkedList<Order> orders = new LinkedList<>();
 		orders.push(new Order(new Item("MAIN-2", 1.0f), customer));
 		orders.push(new Order(new Item("SNACK-2", 1.0f), customer));

@@ -1,5 +1,6 @@
 package CoffeeShop;
 
+import CoffeeShop.Discounts.DiscountsData;
 import CoffeeShop.Discounts.IDiscount;
 
 import java.math.BigDecimal;
@@ -34,7 +35,7 @@ public class Bill {
 		float totalCost = GetCost();
 		for (IDiscount discount : allDiscounts) {
 			System.out.println("Discount - " + discount.toString());
-			CoffeeShop.Discounts.IDiscount.DiscountsData Data = discount.DiscountEval(tmpOrders);
+			DiscountsData Data = discount.DiscountEval(tmpOrders);
 			for (Order order : Data.OrdersUsed()) {
 				System.out.println("	Order " + order);
 			}

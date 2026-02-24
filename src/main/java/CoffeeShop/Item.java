@@ -52,5 +52,6 @@ public class Item {
 enum Category {
 	DRINK,
 	MAIN,
-	SNACK
+	SNACK,
+	TEST
 }
