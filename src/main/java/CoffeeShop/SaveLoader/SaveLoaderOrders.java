@@ -38,7 +38,6 @@ public class SaveLoaderOrders extends ASaveLoader<Order> {
 				orderItem = item;
 			}
 		}
-		System.out.printf("order item ID: %s \n", orderItem);
 
 		if (orderItem == null) {
 			// Couldn't find item associated to order
