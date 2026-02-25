@@ -1,5 +1,6 @@
 package CoffeeShop;
 
+import java.util.Objects;
 import java.util.UUID;
 
 public class Customer {
@@ -11,8 +12,23 @@ public class Customer {
         this.id = UUID.randomUUID();
     }
 
+    public Customer(String name, UUID id) {
+        this.name = name;
+        this.id = id;
+    }
+
 	@Override
 	public String toString() {
 		return name + ":" + id.toString();
+	}
+
+    @Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null || getClass() != obj.getClass())
+			return false;
+		Customer other = (Customer) obj;
+		return Objects.equals(this.id, other.id);
 	}
 }

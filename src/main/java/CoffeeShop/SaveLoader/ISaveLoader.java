@@ -4,6 +4,6 @@ import java.io.IOException;
 import java.util.List;
 
 public interface ISaveLoader<T> {
-	List<T> LoadData(String path) throws LoadingException;
-	void SaveData(List<T> data) throws IOException;
+	List<T> LoadData();
+	void SaveData(List<T> data) throws SaveLoaderException;
 }

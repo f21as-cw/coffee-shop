@@ -1,20 +1,18 @@
 package CoffeeShop.SaveLoader;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import CoffeeShop.Customer;
+import CoffeeShop.Item;
 import CoffeeShop.Order;
-import CoffeeShop.Items.IItem;
-import CoffeeShop.Items.Item;
 
 public class SaveLoaderOrders extends ASaveLoader<Order> {
 
 	List<Customer> _customers;
 	List<Item> _items;
 
-	SaveLoaderOrders(String readPath, String writePath, List<Item> items, List<Customer> customers) throws IOException {
+	public SaveLoaderOrders(String readPath, String writePath, List<Item> items, List<Customer> customers)  {
 		super(readPath, writePath);
 
 		this._items = items;
@@ -31,14 +29,15 @@ public class SaveLoaderOrders extends ASaveLoader<Order> {
 			// There is missing information
 			return null;
 		}
-		String itemID = values[0];
-		String customerID = values[1];
+		String customerID = values[0];
+		String itemID = values[1];
 
 		for (Item item : this._items) {
-			if (item.id == itemID) {
+			if (item.getID().equals(itemID)) {
 				orderItem = item;
 			}
 		}
+		System.out.printf("order item ID: %s \n", orderItem);
 
 		if (orderItem == null) {
 			// Couldn't find item associated to order
@@ -46,7 +45,7 @@ public class SaveLoaderOrders extends ASaveLoader<Order> {
 		}
 
 		for (Customer customer : this._customers) {
-			if (customer.id.toString() == customerID) {
+			if (customer.id.toString().equals(customerID)) {
 				orderCustomer = customer;
 			}
 		}
@@ -61,9 +60,7 @@ public class SaveLoaderOrders extends ASaveLoader<Order> {
 	}
 
 	public String EntityToString(Order entity) {
-		itemID = entity.
-
-		return "";
+		return entity.getCustomer().id.toString() + "," + entity.getItem().getID();
 	}
 
 }

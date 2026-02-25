@@ -10,12 +10,21 @@ public class Item {
 	String _IconPath;
 	String _ID;
 
-	public Item(String ID, float cost) {
+	public Item(String ID, float cost) throws ItemException {
+		if (cost <= 0) {
+			throw new ItemException("Cost can't be zero or less");
+		}
+
 		_cost = cost;
 		String[] parts = ID.split("-");
 		_category = Category.valueOf(parts[0]);
 		_IDNum = Integer.parseInt(parts[1]);
 		_ID = ID;
+	}
+
+	public Item(String ID, float cost, String desciption) throws ItemException {
+		this(ID, cost);
+		_Description = desciption;
 	}
 
 	public String getID() {
@@ -30,6 +39,24 @@ public class Item {
 		_cost = cost;
 	}
 
+	public Category getCategory() {
+		return _category;
+	}
+
+	public void setCategory(Category category) {
+		this._category = category;
+	}
+
+	public String getDescription() {
+		return _Description;
+	}
+
+	public void setDescription(String description) {
+		this._Description = description;
+	}
+
+
+	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
 			return true;

@@ -2,6 +2,7 @@ package CoffeeShop.SaveLoader;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -9,66 +10,67 @@ import java.util.ArrayList;
 import java.util.List;
 
 abstract class ASaveLoader<T> implements ISaveLoader<T> {
-	FileReader _fileReader;
-	FileWriter _fileWriter;
 
+    private final String readPath;
+    private final String writePath;
 
+    public ASaveLoader(String readPath, String writePath) {
+        this.readPath = readPath;
+        this.writePath = writePath;
+    }
 
-	ASaveLoader(String readPath, String writePath) throws IOException {
-		this._fileReader = new FileReader(readPath);
-		this._fileWriter = new FileWriter(writePath);
-	}
+    private List<String> readFile() throws FileNotFoundException {
+        BufferedReader reader = new BufferedReader(new FileReader(readPath));
+        return reader.lines().toList();
+    }
 
-	protected List<String> ReadFile() throws LoadingException {
+    private void writeFile(List<String> data) throws SaveLoaderException {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(writePath))) {
 
-		BufferedReader reader = new BufferedReader(this._fileReader);
-		List<String> lines = reader.lines().toList();
+            for (String line : data) {
+                writer.write(line);
+                writer.newLine();
+            }
 
-		if (lines.size() <= 0) {
-			throw new LoadingException("No lines were loaded from file");
+        } catch (IOException e) {
+            throw new SaveLoaderException(
+                "Failed to write file: " + writePath
+            );
+        }
+    }
+
+    abstract T StringToEntity(String str);
+    abstract String EntityToString(T entity);
+
+    @Override
+    public List<T> LoadData() {
+        List<T> data = new ArrayList<>();
+        List<String> lines;
+
+		try {
+			lines = this.readFile();
+		} catch (FileNotFoundException e) {
+            throw new SaveLoaderRuntimeException("Failed to read file: '" + readPath + "'");
 		}
 
-		return lines;
-	}
+        for (String line : lines) {
+            T item = this.StringToEntity(line);
+            if (item != null) {
+                data.add(item);
+            }
+        }
 
-	protected void WriteFile(List<String> data) throws IOException {
-		BufferedWriter writer = new BufferedWriter(this._fileWriter);
+        return data;
+    }
 
+    @Override
+    public void SaveData(List<T> data) throws SaveLoaderException {
+        List<String> lines = new ArrayList<>();
 
-		for (String line : data) {
-			writer.write(line);
-			writer.newLine();
-		}
-	}
+        for (T entity : data) {
+            lines.add(this.EntityToString(entity));
+        }
 
-	abstract T StringToEntity(String str);
-	abstract String EntityToString(T entity);
-
-	@Override
-	public List<T> LoadData(String path) throws LoadingException  {
-		List<T> data = new ArrayList<T>();
-		List<String> lines = this.ReadFile();
-
-		for (String line : lines) {
-			T item = this.StringToEntity(line);
-
-			if (item != null) {
-				data.add(item);
-			}
-		}
-
-		return data;
-	}
-
-	@Override
-	public void SaveData(List<T> data) throws IOException {
-		List<String> lines = new ArrayList<String>();
-
-		for (T entity : data) {
-			String line = this.EntityToString(entity);
-			lines.add(line);
-		}
-
-		this.WriteFile(lines);
-	}
+        this.writeFile(lines);
+    }
 }

@@ -2,25 +2,52 @@ package CoffeeShop.SaveLoader;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale.Category;
 
-import CoffeeShop.Items.*;;
+import CoffeeShop.Item;
+import CoffeeShop.ItemException;
 
 public class SaveLoaderItems extends ASaveLoader<Item> {
 
-	SaveLoaderItems(String readPath, String writePath) throws IOException {
+	public SaveLoaderItems(String readPath, String writePath) {
 		super(readPath, writePath);
 	}
 
 	@Override
-	public List<Item> LoadData(String path) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("Unimplemented method 'LoadData'");
+	Item StringToEntity(String str) {
+		String[] values = str.split(",");
+
+		if (values.length < 3) {
+			// There is missing information
+			return null;
+		}
+
+		String id = values[0];
+		String cost = values[1];
+		String description = values[2];
+
+		Float parsedFloat;
+		try {
+			parsedFloat = Float.parseFloat(cost);
+		}
+		catch (NumberFormatException e) {
+			return null;
+		}
+
+		try {
+			return new Item(id, parsedFloat, description);
+		} catch (ItemException e) {
+			return null;
+		}
 	}
 
 	@Override
-	public void SaveData(Item data) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("Unimplemented method 'StoreData'");
+	String EntityToString(Item entity) {
+		String id = entity.getID().toString();
+		float cost = entity.getCost();
+		String description = entity.getDescription();
+
+		return id + "," + cost + "," + description;
 	}
 
 
