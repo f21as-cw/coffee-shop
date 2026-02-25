@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import CoffeeShop.Order;
 import CoffeeShop.Customer;
 import CoffeeShop.Item;
+import CoffeeShop.ItemException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -28,7 +29,7 @@ public class DiscountMealDealTest {
 	}
 
 	@Test
-	public void testDiscountMealDealNoCost() {
+	public void testDiscountMealDealNoCost() throws ItemException {
 		ArrayList<Item> items = new ArrayList<Item>();
 		items.add(new Item("MAIN-1", 1.0f));
 		assertThrows(
@@ -37,7 +38,7 @@ public class DiscountMealDealTest {
 	}
 
 	@Test
-	public void testDiscountEvalNoItem() throws InvalidDiscountException {
+	public void testDiscountEvalNoItem() throws InvalidDiscountException, ItemException {
 		Item main = new Item("MAIN-1", 2.0f);
 		Item snack = new Item("SNACK-1", 1.0f);
 		Item drink = new Item("DRINK-1", 1.0f);
@@ -54,7 +55,7 @@ public class DiscountMealDealTest {
 	}
 
 	@Test
-	public void testDiscountEvalOneItem() throws InvalidDiscountException {
+	public void testDiscountEvalOneItem() throws InvalidDiscountException, ItemException {
 		Item main = new Item("MAIN-1", 2.0f);
 		Item snack = new Item("SNACK-1", 1.0f);
 		Item drink = new Item("DRINK-1", 1.0f);
@@ -72,7 +73,7 @@ public class DiscountMealDealTest {
 	}
 
 	@Test
-	public void testDiscountEvalTwoItems() throws InvalidDiscountException {
+	public void testDiscountEvalTwoItems() throws InvalidDiscountException, ItemException {
 		Item main = new Item("MAIN-1", 2.0f);
 		Item snack = new Item("SNACK-1", 1.0f);
 		Item drink = new Item("DRINK-1", 1.0f);
@@ -91,7 +92,7 @@ public class DiscountMealDealTest {
 	}
 
 	@Test
-	public void testDiscountEvalThreeItems() throws InvalidDiscountException {
+	public void testDiscountEvalThreeItems() throws InvalidDiscountException, ItemException {
 		Item main = new Item("MAIN-1", 2.0f);
 		Item snack = new Item("SNACK-1", 1.0f);
 		Item drink = new Item("DRINK-1", 1.0f);
@@ -117,7 +118,7 @@ public class DiscountMealDealTest {
 	}
 
 	@Test
-	public void testDiscountEvalItem() throws InvalidDiscountException {
+	public void testDiscountEvalItem() throws InvalidDiscountException, ItemException {
 		Item main = new Item("MAIN-1", 2.0f);
 		Item snack = new Item("SNACK-1", 1.0f);
 		Item drink = new Item("DRINK-1", 1.0f);

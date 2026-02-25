@@ -19,23 +19,22 @@ abstract class ASaveLoader<T> implements ISaveLoader<T> {
         this.writePath = writePath;
     }
 
-    private List<String> readFile() throws FileNotFoundException {
-        BufferedReader reader = new BufferedReader(new FileReader(readPath));
-        return reader.lines().toList();
+    private List<String> readFile() {
+        try (BufferedReader reader = new BufferedReader(new FileReader(readPath))) {
+			return reader.lines().toList();
+		} catch (IOException e) {
+            throw new SaveLoaderRuntimeException("Failed to read file: '" + readPath + "'");
+		}
     }
 
     private void writeFile(List<String> data) throws SaveLoaderException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(writePath))) {
-
             for (String line : data) {
                 writer.write(line);
                 writer.newLine();
             }
-
         } catch (IOException e) {
-            throw new SaveLoaderException(
-                "Failed to write file: " + writePath
-            );
+            throw new SaveLoaderException("Failed to write file: " + writePath);
         }
     }
 
@@ -47,11 +46,7 @@ abstract class ASaveLoader<T> implements ISaveLoader<T> {
         List<T> data = new ArrayList<>();
         List<String> lines;
 
-		try {
-			lines = this.readFile();
-		} catch (FileNotFoundException e) {
-            throw new SaveLoaderRuntimeException("Failed to read file: '" + readPath + "'");
-		}
+        lines = this.readFile();
 
         for (String line : lines) {
             T item = this.StringToEntity(line);

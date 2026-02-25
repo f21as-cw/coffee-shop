@@ -51,7 +51,7 @@ public class BillTest {
     }
 
     @Test
-    void CostTest1(){
+    void CostTest1() throws ItemException{
         Bill bill = new Bill(_Customer);
         bill.addOrder(new Order(new Item("MAIN-01",2.5f), _Customer));
         bill.addOrder(new Order(new Item("SNACK-01", 5.4f), _Customer));
@@ -63,7 +63,7 @@ public class BillTest {
         assert bill.GetCost() == 34.3f;
     }
 
-    boolean TestRandomBill(int size){
+    boolean TestRandomBill(int size) throws ItemException{
         Bill bill = new Bill(_Customer);
         Random random = new Random();
         float current = 0;
@@ -76,32 +76,32 @@ public class BillTest {
     }
 
     @Test
-    void rndCostTest1(){
+    void rndCostTest1() throws ItemException{
         assert TestRandomBill(10);
     }
 
     @Test
-    void rndCostTest2(){
+    void rndCostTest2() throws ItemException{
         assert TestRandomBill(25);
     }
 
     @Test
-    void rndCostTest3(){
+    void rndCostTest3() throws ItemException{
         assert TestRandomBill(100);
     }
 
     @Test
-    void rndCostTest4(){
+    void rndCostTest4() throws ItemException{
         assert TestRandomBill(1000);
     }
 
     @Test
-    void rndCostTest5(){
+    void rndCostTest5() throws ItemException{
         assert TestRandomBill(10000);
     }
 
     @Test
-    void DiscountTest1() throws InvalidDiscountException {
+    void DiscountTest1() throws InvalidDiscountException, ItemException {
         Bill bill = new Bill(_Customer);
         Item snack = new Item("SNACK-001", 2.5f);
         List<Item> items = new ArrayList<>(List.of(

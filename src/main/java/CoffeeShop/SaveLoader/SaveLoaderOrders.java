@@ -15,9 +15,10 @@ public class SaveLoaderOrders extends ASaveLoader<Order> {
 	public SaveLoaderOrders(String readPath, String writePath, List<Item> items, List<Customer> customers)  {
 		super(readPath, writePath);
 
-		this._items = items;
 		this._customers = customers;
+		this._items = items;
 	}
+
 
 	public Order StringToEntity(String str) {
 		Item orderItem = null;
