@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import CoffeeShop.Order;
 import CoffeeShop.Customer;
 import CoffeeShop.Item;
+import CoffeeShop.ItemException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -20,7 +21,7 @@ public class DiscountPercentageTest {
 	}
 
 	@Test
-	public void testDiscountPercentage0() {
+	public void testDiscountPercentage0() throws ItemException {
 		Item item = new Item("MAIN-1", 1.0f);
 		assertThrows(
 				InvalidDiscountException.class,
@@ -28,7 +29,7 @@ public class DiscountPercentageTest {
 	}
 
 	@Test
-	public void testDiscountPercentage1() {
+	public void testDiscountPercentage1() throws ItemException {
 		Item item = new Item("MAIN-1", 1.0f);
 		assertThrows(
 				InvalidDiscountException.class,
@@ -36,7 +37,7 @@ public class DiscountPercentageTest {
 	}
 
 	@Test
-	public void testDiscountEvalNoItem() throws InvalidDiscountException {
+	public void testDiscountEvalNoItem() throws InvalidDiscountException, ItemException {
 		Item item = new Item("MAIN-1", 1.0f);
 		IDiscount fifty = new DiscountPercentage(item, 0.5f);
 		LinkedList<Order> orders = new LinkedList<>();
@@ -47,7 +48,7 @@ public class DiscountPercentageTest {
 	}
 
 	@Test
-	public void testDiscountEvalOneItem() throws InvalidDiscountException {
+	public void testDiscountEvalOneItem() throws InvalidDiscountException, ItemException {
 		Item item = new Item("MAIN-1", 1.0f);
 		IDiscount fifty = new DiscountPercentage(item, 0.5f);
 		Order order = new Order(item, customer);
@@ -61,7 +62,7 @@ public class DiscountPercentageTest {
 	}
 
 	@Test
-	public void testDiscountEvalTwoItems() throws InvalidDiscountException {
+	public void testDiscountEvalTwoItems() throws InvalidDiscountException, ItemException {
 		Item item = new Item("MAIN-1", 1.0f);
 		IDiscount fifty = new DiscountPercentage(item, 0.5f);
 		Order order = new Order(item, customer);
@@ -78,7 +79,7 @@ public class DiscountPercentageTest {
 	}
 
 	@Test
-	public void testDiscountEvalOtherItem() throws InvalidDiscountException {
+	public void testDiscountEvalOtherItem() throws InvalidDiscountException, ItemException {
 		Item item = new Item("MAIN-1", 1.0f);
 		IDiscount fifty = new DiscountPercentage(item, 0.5f);
 		Item other = new Item("MAIN-2", 2.0f);

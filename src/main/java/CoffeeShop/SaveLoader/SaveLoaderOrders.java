@@ -1,54 +1,66 @@
 package CoffeeShop.SaveLoader;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import CoffeeShop.Customer;
+import CoffeeShop.Item;
 import CoffeeShop.Order;
 
 public class SaveLoaderOrders extends ASaveLoader<Order> {
 
 	List<Customer> _customers;
+	List<Item> _items;
 
-	public SaveLoaderOrders(String readPath, String writePath, List<Customer> customers) throws IOException {
+	public SaveLoaderOrders(String readPath, String writePath, List<Item> items, List<Customer> customers)  {
 		super(readPath, writePath);
 
 		this._customers = customers;
+		this._items = items;
 	}
 
-	private Order ParseLine(String line) {
-		String[] values = line.split(",");
 
-		for (String value : values ) {
+	public Order StringToEntity(String str) {
+		Item orderItem = null;
+		Customer orderCustomer = null;
 
+		String[] values = str.split(",");
+
+		if (values.length < 2) {
+			// There is missing information
+			return null;
 		}
+		String customerID = values[0];
+		String itemID = values[1];
 
-		return null;
-	}
-
-	@Override
-	public List<Order> LoadData(String path) throws LoadingException  {
-		List<Order> orders = new ArrayList<Order>();
-		List<String> lines = this.ReadFile();
-
-		for (String line : lines) {
-			Order order = this.ParseLine(line);
-
-			if (order != null) {
-				orders.add(order);
+		for (Item item : this._items) {
+			if (item.getID().equals(itemID)) {
+				orderItem = item;
 			}
-
 		}
 
-		return orders;
+		if (orderItem == null) {
+			// Couldn't find item associated to order
+			return null;
+		}
+
+		for (Customer customer : this._customers) {
+			if (customer.id.toString().equals(customerID)) {
+				orderCustomer = customer;
+			}
+		}
+
+
+		if (orderCustomer == null) {
+			// Couldn't find customer associated to order
+			return null;
+		}
+
+		return new Order(orderItem, orderCustomer);
 	}
 
-	@Override
-	public void SaveData(Order data) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("Unimplemented method 'StoreData'");
+	public String EntityToString(Order entity) {
+		return entity.getCustomer().id.toString() + "," + entity.getItem().getID();
 	}
-
 
 }

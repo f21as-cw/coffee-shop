@@ -27,6 +27,15 @@ public class Order {
 		_item = item;
 	}
 
+	public Customer getCustomer() {
+		return _customer;
+	}
+
+	public void setSustomer(Customer customer) {
+		this._customer = _customer;
+	}
+
+
 	@Override
 	public String toString() {
 		return _item + ":" + _customer.name;

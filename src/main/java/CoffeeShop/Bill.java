@@ -12,12 +12,18 @@ import java.util.List;
 
 public class Bill {
 
+	public Customer customer;
+	public List<Order> Orders = new ArrayList<>();
+
 	public Bill(Customer customer) {
 		this.customer = customer;
 	}
 
-	public Customer customer;
-	public List<Order> Orders = new ArrayList<>();
+	public Bill(Customer customer, List<Order> orders) {
+		this.customer = customer;
+		this.Orders = orders;
+
+	}
 
 	public void addOrder(Order order) {
 		if (order == null)
