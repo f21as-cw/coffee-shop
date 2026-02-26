@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Locale.Category;
 
+import CoffeeShop.Exceptions.InvalidItemFormatException;
 import CoffeeShop.Item;
 import CoffeeShop.ItemException;
 
@@ -36,7 +37,7 @@ public class SaveLoaderItems extends ASaveLoader<Item> {
 
 		try {
 			return new Item(id, parsedFloat, description);
-		} catch (ItemException e) {
+		} catch (InvalidItemFormatException e) {
 			return null;
 		}
 	}

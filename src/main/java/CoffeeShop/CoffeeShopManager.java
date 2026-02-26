@@ -2,51 +2,108 @@ package CoffeeShop;
 
 import CoffeeShop.Discounts.IDiscount;
 import CoffeeShop.Exceptions.CustomerNotFoundException;
-import CoffeeShop.SaveLoader.ISaveLoader;
-import CoffeeShop.SaveLoader.SaveLoaderItems;
-import CoffeeShop.SaveLoader.SaveLoaderOrders;
+import CoffeeShop.Exceptions.ItemNotFoundException;
+import CoffeeShop.SaveLoader.*;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 public class CoffeeShopManager {
-	public Map<Customer, Bill> CustomerData;
+	public Map<Customer, Bill> CustomerData = new HashMap<>();
+	public List<Customer> getCustomers() { return new ArrayList<>(CustomerData.keySet()); }
+
+
 	private List<Item> AvaliableItems;
-	private List<IDiscount> AvaliableDiscounts;
+	public List<Item> getAvaliableItems() { return AvaliableItems; }
+	public void setAvaliableItems(List<Item> avaliableItems) { AvaliableItems = avaliableItems; }
 
-	private SaveLoaderOrders saveLoaderOrders;
-	private SaveLoaderItems saveLoaderItems;
+	private List<IDiscount> AvailableDiscounts;
+	public List<IDiscount> getAvailableDiscounts() { return AvailableDiscounts; }
+	public void setAvailableDiscounts(List<IDiscount> avaliableDiscounts) { AvailableDiscounts = avaliableDiscounts; }
 
+	private ISaveLoader<Order> saveLoaderOrders;
+	private ISaveLoader<Item> saveLoaderItems;
+	private ISaveLoader<Customer> saveLoaderCustomers;
 
+	public CoffeeShopManager() {}
 
-	public static void main(String[] args) {
+	public CoffeeShopManager(List<Customer> customers, List<Item> items, List<Order> orders){
+		AvaliableItems = items;
 
+		for (Customer customer : customers) {
+			Bill newBill = new Bill(customer);
+			CustomerData.put(customer, newBill);
+		}
+
+		for (Order order : orders) {
+			if (!CustomerData.containsKey(order._customer))
+				throw new CustomerNotFoundException("Customer not real");
+
+			CustomerData.get(order._customer).addOrder(order);;
+		}
 	}
 
-	//TODO once the save loader is complete
-	public void Startup(){
-//		try {
-//			Properties prop = new Properties();
-//			try (InputStream input = new FileInputStream("Config.properties")){
-//				prop.load(input);
-//
-//				String OrderPath = prop.getProperty("OrderPath");
-//				String ItemPath = prop.getProperty("ItemPath");
-//
-//				saveLoaderOrders = new SaveLoaderOrders(OrderPath, OrderPath, );
-//				saveLoaderItems = new SaveLoaderItems();
-//			}
-//
-//		}catch (IOException e){
-//			throw new RuntimeException("Unable to open file");
-//		}
+	public void LoadData(){
+        try {
+            Path dataDir = Paths.get("data");
+
+            String customersPath = dataDir.resolve("customers.csv").toString();
+            String itemsPath = dataDir.resolve("items.csv").toString();
+            String ordersPath = dataDir.resolve("orders.csv").toString();
+
+			saveLoaderCustomers = new SaveLoaderCustomers(customersPath, customersPath);
+			saveLoaderItems = new SaveLoaderItems(itemsPath, itemsPath);
+
+            List<Customer> customers = saveLoaderCustomers.LoadData();
+            List<Item> items = saveLoaderItems.LoadData();
+
+			saveLoaderOrders = new SaveLoaderOrders(ordersPath, ordersPath, items, customers);
+
+            List<Order> orders = saveLoaderOrders.LoadData();
+
+            AvaliableItems = items;
+            for (Customer customer : customers) {
+                Bill newBill = new Bill(customer);
+                CustomerData.put(customer, newBill);
+            }
+
+            for (Order order : orders) {
+                if (CustomerData.containsKey(order._customer))
+                    throw new CustomerNotFoundException("Customer not real");
+
+                CustomerData.get(order._customer).addOrder(order);;
+            }
+        } catch (CustomerNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+    }
+
+	public void SaveData(){
+        try {
+            saveLoaderCustomers.SaveData(getCustomers());
+			saveLoaderItems.SaveData(getAvaliableItems());
+			saveLoaderOrders.SaveData(getOrders());
+        } catch (SaveLoaderException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+	private List<Order> getOrders() {
+		List<Order> orders = new ArrayList<>();
+		for (Bill bill : CustomerData.values()) {
+			orders.addAll(bill.Orders);
+		}
+		return orders;
 	}
 
-	public List<Order> GetCustomerOrder(Customer customer) {
+	public List<Order> GetCustomerOrders(Customer customer) {
 		if (!CustomerData.containsKey(customer))
 			throw new CustomerNotFoundException("Customer not found");
 
@@ -59,12 +116,17 @@ public class CoffeeShopManager {
 		if (!CustomerData.containsKey(customer))
 			throw new CustomerNotFoundException("Customer not found");
 
+		if (!AvaliableItems.contains(item))
+			throw new ItemNotFoundException("Item does not exist or isn't available");
+
 		Bill customerBill = CustomerData.get(customer);
 
 		Order newOrder = new Order(item, customer);
 		customerBill.addOrder(newOrder);
 
 	}
+
+
 
 	//TODO
 	public void RemoveOrder(Order order) {
@@ -86,17 +148,28 @@ public class CoffeeShopManager {
 		CustomerData.remove(customer);
 	}
 
-	public void CloseoutCustomer(Customer customer, boolean Remove) throws Exception {
+	public void CloseoutCustomer(Customer customer, boolean Remove) {
 		if (!CustomerData.containsKey(customer))
-			throw new Exception("Customer does not exist");
+			throw new CustomerNotFoundException("Customer is not found");
 
 		Bill bill = CustomerData.get(customer);
 
-		bill.GetTotalCost(AvaliableDiscounts);
+		bill.GetTotalCost(AvailableDiscounts);
 
 		if (Remove)
 			RemoveCustomer(customer);
 
+	}
+
+	public Bill GetCustomerBill(Customer customer){
+		if (!CustomerData.containsKey(customer))
+			throw new CustomerNotFoundException("Customer not found");
+
+		return CustomerData.get(customer);
+	}
+
+	public Bill.BillInfo GetCustomerBillInfo(Customer customer){
+		return GetCustomerBill(customer).GetTotalCostInfo(AvailableDiscounts);
 	}
 
 }

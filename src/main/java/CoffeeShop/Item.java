@@ -6,14 +6,51 @@ import java.util.Objects;
 
 public class Item {
 	float _cost;
+
+	public Category getCategory() {
+		return _category;
+	}
+
+	public void setCategory(Category _category) {
+		this._category = _category;
+	}
+
 	Category _category;
 	int _IDNum;
+
+	public String getDescription() {
+		return _Description;
+	}
+
+	public void setDescription(String _Description) {
+		this._Description = _Description;
+	}
+
 	String _Description;
+
+	public String getIconPath() {
+		return _IconPath;
+	}
+
+	public void setIconPath(String _IconPath) {
+		this._IconPath = _IconPath;
+	}
+
 	String _IconPath;
 	String _ID;
 
 	public Item(String id, float cost) {
+		this(id, cost, "", "");
+	}
+
+	public Item(String id, float cost, String description){
+		this(id, cost, description, "");
+	}
+
+	public Item(String id, float cost, String description, String iconpath){
 		this._cost = cost;
+		this._Description = description;
+		this._IconPath = iconpath;
 
 		if (id == null || !id.contains("-")) {
 			throw new InvalidItemFormatException("ID must contain a hyphen: " + id);

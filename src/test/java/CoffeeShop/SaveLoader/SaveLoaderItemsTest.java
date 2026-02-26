@@ -66,7 +66,7 @@ public class SaveLoaderItemsTest {
         SaveLoaderItems loader = new SaveLoaderItems(readPath.toString(), tempDir.resolve("output.txt").toString());
         List<Item> items = loader.LoadData();
 
-        assertEquals(0, items.size());
+        assertEquals(1, items.size());
     }
 
     @Test

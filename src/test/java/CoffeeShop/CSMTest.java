@@ -1,5 +1,6 @@
 package CoffeeShop;
 
+import CoffeeShop.Exceptions.CustomerNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -29,6 +30,7 @@ public class CSMTest {
         snack = new Item("SNACK-01", 3.50f);
         items.add(drink);
         items.add(snack);
+
     }
 
     @Test
