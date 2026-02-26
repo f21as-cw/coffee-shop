@@ -7,10 +7,7 @@ import CoffeeShop.SaveLoader.*;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class CoffeeShopManager {
 	public Map<Customer, Bill> CustomerData = new HashMap<>();
@@ -50,6 +47,8 @@ public class CoffeeShopManager {
 	public void LoadData(){
         try {
             Path dataDir = Paths.get("data");
+			System.out.println(dataDir.toAbsolutePath());
+			Properties config = ResourceLoader.loadConfig();
 
             String customersPath = dataDir.resolve("customers.csv").toString();
             String itemsPath = dataDir.resolve("items.csv").toString();
@@ -170,6 +169,14 @@ public class CoffeeShopManager {
 
 	public Bill.BillInfo GetCustomerBillInfo(Customer customer){
 		return GetCustomerBill(customer).GetTotalCostInfo(AvailableDiscounts);
+	}
+
+	public void AddItem(Item item){
+		AvaliableItems.add(item);
+	}
+
+	public void RemoveItem(Item item){
+		AvaliableItems.remove(item);
 	}
 
 }
