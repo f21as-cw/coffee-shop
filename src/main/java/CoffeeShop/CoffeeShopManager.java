@@ -125,9 +125,6 @@ public class CoffeeShopManager {
 
 	}
 
-
-
-	//TODO
 	public void RemoveOrder(Order order) {
 		if (!CustomerData.containsKey(order._customer))
 			throw new CustomerNotFoundException("Customer not Found");
