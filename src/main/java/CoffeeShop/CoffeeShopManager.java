@@ -71,13 +71,14 @@ public class CoffeeShopManager {
             }
 
             for (Order order : orders) {
-                if (CustomerData.containsKey(order._customer))
+                if (!CustomerData.containsKey(order._customer)){
                     throw new CustomerNotFoundException("Customer not real");
+				}
 
                 CustomerData.get(order._customer).addOrder(order);;
             }
         } catch (CustomerNotFoundException e) {
-            throw new RuntimeException(e);
+            throw new CustomerNotFoundException("Customer problem");
         } catch (Exception e) {
 			throw new RuntimeException(e);
 		}

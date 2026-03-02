@@ -22,13 +22,16 @@ public class Customer {
 		return name + ":" + id.toString();
 	}
 
-    @Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null || getClass() != obj.getClass())
-			return false;
-		Customer other = (Customer) obj;
-		return Objects.equals(this.id, other.id);
+	@Override
+	public int hashCode() {
+		return Objects.hash(id);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		Customer that = (Customer) o;
+		return Objects.equals(id, that.id);
 	}
 }
