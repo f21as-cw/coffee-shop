@@ -53,6 +53,11 @@
 						</goals>
 					</execution>
 				</executions>
+				<configuration>
+					<excludes>
+						<exclude>CoffeeShop/GUI/</exclude>
+					</excludes>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
