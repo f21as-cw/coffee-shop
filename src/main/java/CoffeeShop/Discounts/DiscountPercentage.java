@@ -7,8 +7,8 @@ import CoffeeShop.Order;
 import CoffeeShop.Item;
 
 public class DiscountPercentage implements IDiscount {
-	Item _item;
-	float _percentage;
+	public Item _item;
+	public float _percentage;
 
 	public DiscountPercentage(Item item, float percentage) throws InvalidDiscountException {
 		if (percentage <= 0) {
@@ -44,5 +44,24 @@ public class DiscountPercentage implements IDiscount {
 		float discount = items * _item.getCost() * _percentage;
 
 		return new DiscountsData(used, discount);
+	}
+
+	@Override
+	public String StringToEntity() {
+		return "";
+	}
+
+	@Override
+	public String EntityToString() {
+		return this.getClass().getName() + "," + discountID.toString() + ",(" + _item.getID() + ":" + _percentage + ")";
+	}
+
+	@Override
+	public IDiscount linkToRealItems(List<Item> availableItems) {
+		return availableItems.stream()
+				.filter(i -> i.equals(this._item))
+				.findFirst()
+				.map(realItem -> new DiscountPercentage(realItem, this._percentage))
+				.orElse(null); // Returns null if item isn't available
 	}
 }

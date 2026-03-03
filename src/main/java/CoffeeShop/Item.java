@@ -39,6 +39,10 @@ public class Item {
 	String _IconPath;
 	String _ID;
 
+	public Item(String id){
+		this(id, 0, "", "");
+	}
+
 	public Item(String id, float cost) {
 		this(id, cost, "", "");
 	}

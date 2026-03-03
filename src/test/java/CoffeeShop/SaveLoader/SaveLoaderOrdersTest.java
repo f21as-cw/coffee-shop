@@ -35,7 +35,7 @@ public class SaveLoaderOrdersTest {
         List<Customer> customers = new ArrayList<>();
         customers.add(new Customer("John Doe", customerId));
 
-        SaveLoaderOrders loader = new SaveLoaderOrders(readPath.toString(), tempDir.resolve("output.txt").toString(), items, customers);
+        SaveLoaderOrders loader = new SaveLoaderOrders(readPath.toString(), tempDir.resolve("output.txt").toString());
         List<Order> orders = loader.LoadData();
 
         assertEquals(1, orders.size());
@@ -56,7 +56,7 @@ public class SaveLoaderOrdersTest {
         List<Customer> customers = new ArrayList<>();
         customers.add(new Customer("John Doe", customerId));
 
-        SaveLoaderOrders loader = new SaveLoaderOrders(readPath.toString(), tempDir.resolve("output.txt").toString(), items, customers);
+        SaveLoaderOrders loader = new SaveLoaderOrders(readPath.toString(), tempDir.resolve("output.txt").toString());
         List<Order> orders = loader.LoadData();
 
         assertEquals(0, orders.size());
@@ -75,7 +75,7 @@ public class SaveLoaderOrdersTest {
         List<Customer> customers = new ArrayList<>();
         customers.add(new Customer("John Doe", customerId));
 
-        SaveLoaderOrders loader = new SaveLoaderOrders(readPath.toString(), tempDir.resolve("output.txt").toString(), items, customers);
+        SaveLoaderOrders loader = new SaveLoaderOrders(readPath.toString(), tempDir.resolve("output.txt").toString());
         List<Order> orders = loader.LoadData();
 
         assertEquals(0, orders.size());
@@ -94,7 +94,7 @@ public class SaveLoaderOrdersTest {
         List<Customer> customers = new ArrayList<>();
         customers.add(new Customer("John Doe", customerId));
 
-        SaveLoaderOrders loader = new SaveLoaderOrders(readPath.toString(), tempDir.resolve("output.txt").toString(), items, customers);
+        SaveLoaderOrders loader = new SaveLoaderOrders(readPath.toString(), tempDir.resolve("output.txt").toString());
         List<Order> orders = loader.LoadData();
 
         assertEquals(0, orders.size());
@@ -108,7 +108,7 @@ public class SaveLoaderOrdersTest {
         List<Item> items = new ArrayList<>();
         List<Customer> customers = new ArrayList<>();
 
-        SaveLoaderOrders loader = new SaveLoaderOrders(readPath.toString(), tempDir.resolve("output.txt").toString(), items, customers);
+        SaveLoaderOrders loader = new SaveLoaderOrders(readPath.toString(), tempDir.resolve("output.txt").toString());
         List<Order> orders = loader.LoadData();
 
         assertTrue(orders.isEmpty());
@@ -126,7 +126,7 @@ public class SaveLoaderOrdersTest {
         List<Customer> customers = new ArrayList<>();
         customers.add(new Customer("John Doe", customerId));
 
-        SaveLoaderOrders loader = new SaveLoaderOrders(tempDir.resolve("input.txt").toString(), writePath.toString(), items, customers);
+        SaveLoaderOrders loader = new SaveLoaderOrders(tempDir.resolve("input.txt").toString(), writePath.toString());
 
         List<Order> orders = new ArrayList<>();
         orders.add(new Order(items.get(0), customers.get(0)));
@@ -154,7 +154,7 @@ public class SaveLoaderOrdersTest {
         customers.add(new Customer("John Doe", customerId1));
         customers.add(new Customer("Jane Smith", customerId2));
 
-        SaveLoaderOrders loader = new SaveLoaderOrders(readPath.toString(), tempDir.resolve("output.txt").toString(), items, customers);
+        SaveLoaderOrders loader = new SaveLoaderOrders(readPath.toString(), tempDir.resolve("output.txt").toString());
         List<Order> orders = loader.LoadData();
 
         assertEquals(2, orders.size());
@@ -165,7 +165,7 @@ public class SaveLoaderOrdersTest {
         List<Item> items = new ArrayList<>();
         List<Customer> customers = new ArrayList<>();
 
-        SaveLoaderOrders loader = new SaveLoaderOrders("/nonexistent/path/orders.txt", tempDir.resolve("output.txt").toString(), items, customers);
+        SaveLoaderOrders loader = new SaveLoaderOrders("/nonexistent/path/orders.txt", tempDir.resolve("output.txt").toString());
 
         assertThrows(SaveLoaderRuntimeException.class, () -> loader.LoadData());
     }

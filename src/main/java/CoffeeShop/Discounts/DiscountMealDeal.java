@@ -9,8 +9,8 @@ import CoffeeShop.Item;
 import CoffeeShop.Order;
 
 public class DiscountMealDeal implements IDiscount {
-	List<Item> _items;
-	float _cost;
+	public List<Item> _items;
+	public float _cost;
 
 	public DiscountMealDeal(List<Item> items, float cost) throws InvalidDiscountException {
 		if (items.size() == 0) {
@@ -75,5 +75,34 @@ public class DiscountMealDeal implements IDiscount {
 		float discount = (initalCost - _cost) * count;
 
 		return new DiscountsData(used, discount);
+	}
+
+	@Override
+	public String StringToEntity() {
+		return "";
+	}
+
+	@Override
+	public String EntityToString() {
+		String str = this.getClass().getName() + "," + discountID.toString() + ",((";
+		for (Item item : _items) {
+			str += item.getID() + ";";
+		}
+		str = str.replaceFirst(".$", "");
+		str += "):" + _cost + ")";
+
+		return str;
+	}
+
+	@Override
+	public IDiscount linkToRealItems(List<Item> availableItems) {
+		List<Item> linked = availableItems.stream()
+				.filter(this._items::contains)
+				.toList();
+
+		// Only return if ALL items were found
+		return (linked.size() == this._items.size())
+				? new DiscountMealDeal(linked, this._cost)
+				: null;
 	}
 }

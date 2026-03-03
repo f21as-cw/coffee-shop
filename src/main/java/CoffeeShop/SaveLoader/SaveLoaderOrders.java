@@ -2,28 +2,23 @@ package CoffeeShop.SaveLoader;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 import CoffeeShop.Customer;
+import CoffeeShop.Exceptions.CustomerNotFoundException;
+import CoffeeShop.Exceptions.ItemNotFoundException;
 import CoffeeShop.Item;
+import CoffeeShop.ItemException;
 import CoffeeShop.Order;
 
 public class SaveLoaderOrders extends ASaveLoader<Order> {
 
-	List<Customer> _customers;
-	List<Item> _items;
-
-	public SaveLoaderOrders(String readPath, String writePath, List<Item> items, List<Customer> customers)  {
+	public SaveLoaderOrders(String readPath, String writePath)  {
 		super(readPath, writePath);
-
-		this._customers = customers;
-		this._items = items;
 	}
 
 
 	public Order StringToEntity(String str) {
-		Item orderItem = null;
-		Customer orderCustomer = null;
-
 		String[] values = str.split(",");
 
 		if (values.length < 2) {
@@ -33,30 +28,19 @@ public class SaveLoaderOrders extends ASaveLoader<Order> {
 		String customerID = values[0];
 		String itemID = values[1];
 
-		for (Item item : this._items) {
-			if (item.getID().equals(itemID)) {
-				orderItem = item;
-			}
-		}
 
-		if (orderItem == null) {
-			// Couldn't find item associated to order
-			return null;
-		}
+        Item item = null;
+        Customer customer = null;
+        try {
+            item = new Item(itemID, 0);
+            customer = new Customer("", UUID.fromString(customerID));
+        } catch (Exception e) {
+            return null;
+        }
 
-		for (Customer customer : this._customers) {
-			if (customer.id.toString().equals(customerID)) {
-				orderCustomer = customer;
-			}
-		}
+        if (item == null || customer == null) return null;
 
-
-		if (orderCustomer == null) {
-			// Couldn't find customer associated to order
-			return null;
-		}
-
-		return new Order(orderItem, orderCustomer);
+		return new Order(item, customer);
 	}
 
 	public String EntityToString(Order entity) {

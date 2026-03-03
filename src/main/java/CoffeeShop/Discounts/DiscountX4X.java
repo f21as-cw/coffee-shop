@@ -7,9 +7,9 @@ import CoffeeShop.Order;
 import CoffeeShop.Item;
 
 public class DiscountX4X implements IDiscount {
-	Item _item;
-	int _x;
-	int _y;
+	public Item _item;
+	public int _x;
+	public int _y;
 
 	public DiscountX4X(Item item, int x, int y) throws InvalidDiscountException {
 		if (x <= 0) {
@@ -51,5 +51,24 @@ public class DiscountX4X implements IDiscount {
 		float discount = items * _item.getCost() - itemsToPay * _item.getCost();
 
 		return new DiscountsData(used, discount);
+	}
+
+	@Override
+	public String StringToEntity() {
+		return "";
+	}
+
+	@Override
+	public String EntityToString() {
+		return this.getClass().getName() + "," + discountID.toString() + ",(" + _item.getID() + ":" + _x + ":" + _y + ")";
+	}
+
+	@Override
+	public IDiscount linkToRealItems(List<Item> availableItems) {
+		return availableItems.stream()
+				.filter(i -> i.equals(this._item))
+				.findFirst()
+				.map(realItem -> new DiscountX4X(realItem, this._x, this._y))
+				.orElse(null); // Returns null if item isn't available
 	}
 }

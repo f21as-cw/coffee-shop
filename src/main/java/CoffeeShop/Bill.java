@@ -40,7 +40,7 @@ public class Bill {
 	public record BillInfo(List<IDiscount> DiscountsUsed, float FinalCost) {}
 	public BillInfo GetTotalCostInfo(List<IDiscount> allDiscounts){
 		List<Order> tmpOrders = new ArrayList<>(Orders);
-		List<IDiscount> DiscountsUsed = new ArrayList<>(allDiscounts);
+		List<IDiscount> DiscountsUsed = new ArrayList<>();
 
 		float totalCost = GetCost();
 		for (IDiscount discount : allDiscounts) {

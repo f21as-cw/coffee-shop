@@ -1,5 +1,8 @@
 package CoffeeShop;
 
+import CoffeeShop.Discounts.DiscountMealDeal;
+import CoffeeShop.Discounts.DiscountPercentage;
+import CoffeeShop.Discounts.DiscountX4X;
 import CoffeeShop.Discounts.IDiscount;
 import CoffeeShop.Exceptions.CustomerNotFoundException;
 import CoffeeShop.Exceptions.ItemNotFoundException;
@@ -10,23 +13,43 @@ import java.nio.file.Paths;
 import java.util.*;
 
 public class CoffeeShopManager {
+	public static final String CUSTOMERS_CSV = "customers.csv";
+	public static final String ITEMS_CSV = "items.csv";
+	public static final String ORDERS_CSV = "orders.csv";
+	public static final String DISCOUNTS_CSV = "discounts.csv";
+	public static String DATA_DIR = "data";
+
 	public Map<Customer, Bill> CustomerData = new HashMap<>();
 	public List<Customer> getCustomers() { return new ArrayList<>(CustomerData.keySet()); }
-
 
 	private List<Item> AvaliableItems;
 	public List<Item> getAvaliableItems() { return AvaliableItems; }
 	public void setAvaliableItems(List<Item> avaliableItems) { AvaliableItems = avaliableItems; }
 
-	private List<IDiscount> AvailableDiscounts;
+	private List<IDiscount> AvailableDiscounts = new ArrayList<>();
 	public List<IDiscount> getAvailableDiscounts() { return AvailableDiscounts; }
 	public void setAvailableDiscounts(List<IDiscount> avaliableDiscounts) { AvailableDiscounts = avaliableDiscounts; }
 
 	private ISaveLoader<Order> saveLoaderOrders;
 	private ISaveLoader<Item> saveLoaderItems;
 	private ISaveLoader<Customer> saveLoaderCustomers;
+	private ISaveLoader<IDiscount> saveLoaderDiscounts;
 
-	public CoffeeShopManager() {}
+	public CoffeeShopManager() {
+		Path dataDir = Paths.get(DATA_DIR);
+		System.out.println(dataDir.toAbsolutePath());
+		Properties config = ResourceLoader.loadConfig();
+
+		String customersPath = dataDir.resolve(CUSTOMERS_CSV).toString();
+		String itemsPath = dataDir.resolve(ITEMS_CSV).toString();
+		String ordersPath = dataDir.resolve(ORDERS_CSV).toString();
+		String discountPath = dataDir.resolve(DISCOUNTS_CSV).toString();
+
+		saveLoaderCustomers = new SaveLoaderCustomers(customersPath, customersPath);
+		saveLoaderItems = new SaveLoaderItems(itemsPath, itemsPath);
+		saveLoaderDiscounts = new SaveLoaderDiscounts(discountPath, discountPath);
+		saveLoaderOrders = new SaveLoaderOrders(ordersPath, ordersPath);
+	}
 
 	public CoffeeShopManager(List<Customer> customers, List<Item> items, List<Order> orders){
 		AvaliableItems = items;
@@ -42,45 +65,70 @@ public class CoffeeShopManager {
 
 			CustomerData.get(order._customer).addOrder(order);;
 		}
+
+		Path dataDir = Paths.get(DATA_DIR);
+		System.out.println(dataDir.toAbsolutePath());
+		Properties config = ResourceLoader.loadConfig();
+
+		String customersPath = dataDir.resolve(CUSTOMERS_CSV).toString();
+		String itemsPath = dataDir.resolve(ITEMS_CSV).toString();
+		String ordersPath = dataDir.resolve(ORDERS_CSV).toString();
+		String discountPath = dataDir.resolve(DISCOUNTS_CSV).toString();
+
+		saveLoaderCustomers = new SaveLoaderCustomers(customersPath, customersPath);
+		saveLoaderItems = new SaveLoaderItems(itemsPath, itemsPath);
+		saveLoaderDiscounts = new SaveLoaderDiscounts(discountPath, discountPath);
+		saveLoaderOrders = new SaveLoaderOrders(ordersPath, ordersPath);
 	}
 
 	public void LoadData(){
-        try {
-            Path dataDir = Paths.get("data");
-			System.out.println(dataDir.toAbsolutePath());
-			Properties config = ResourceLoader.loadConfig();
+		List<Customer> customers = saveLoaderCustomers.LoadData();
+		List<Item> items = saveLoaderItems.LoadData();
 
-            String customersPath = dataDir.resolve("customers.csv").toString();
-            String itemsPath = dataDir.resolve("items.csv").toString();
-            String ordersPath = dataDir.resolve("orders.csv").toString();
+		List<IDiscount> loadeddiscounts = saveLoaderDiscounts.LoadData();
 
-			saveLoaderCustomers = new SaveLoaderCustomers(customersPath, customersPath);
-			saveLoaderItems = new SaveLoaderItems(itemsPath, itemsPath);
+		List<Order> loadedorders = saveLoaderOrders.LoadData();
 
-            List<Customer> customers = saveLoaderCustomers.LoadData();
-            List<Item> items = saveLoaderItems.LoadData();
+		AvaliableItems = items;
+		for (Customer customer : customers) {
+			Bill newBill = new Bill(customer);
+			CustomerData.put(customer, newBill);
+		}
 
-			saveLoaderOrders = new SaveLoaderOrders(ordersPath, ordersPath, items, customers);
+		//Link orders
+		List<Order> orders = new ArrayList<>();
+		for (Order order : loadedorders) {
+			if (!CustomerData.containsKey(order.getCustomer())) continue;
+			if (!AvaliableItems.contains(order.getItem())) continue;
 
-            List<Order> orders = saveLoaderOrders.LoadData();
+			Customer customer = CustomerData.keySet().stream()
+					.filter(o -> o.equals(order.getCustomer()))
+					.findFirst()
+					.orElse(null);
 
-            AvaliableItems = items;
-            for (Customer customer : customers) {
-                Bill newBill = new Bill(customer);
-                CustomerData.put(customer, newBill);
-            }
+			Item item = getAvaliableItems().stream()
+					.filter(o -> o.equals(order.getItem()))
+					.findFirst()         // Returns an Optional<Order>
+					.orElse(null);
 
-            for (Order order : orders) {
-                if (!CustomerData.containsKey(order._customer)){
-                    throw new CustomerNotFoundException("Customer not real");
-				}
+			orders.add(new Order(item, customer));
+		}
 
-                CustomerData.get(order._customer).addOrder(order);;
-            }
-        } catch (CustomerNotFoundException e) {
-            throw new CustomerNotFoundException("Customer problem");
-        } catch (Exception e) {
-			throw new RuntimeException(e);
+		for (Order order : orders) {
+			if (!CustomerData.containsKey(order._customer)){
+				throw new CustomerNotFoundException("Customer not real");
+			}
+
+			CustomerData.get(order._customer).addOrder(order);;
+		}
+
+		//Discount linking
+		for (IDiscount loaded : loadeddiscounts) {
+			IDiscount linked = loaded.linkToRealItems(getAvaliableItems());
+
+			if (linked != null) {
+				CreateDiscount(linked);
+			}
 		}
     }
 
@@ -89,6 +137,7 @@ public class CoffeeShopManager {
             saveLoaderCustomers.SaveData(getCustomers());
 			saveLoaderItems.SaveData(getAvaliableItems());
 			saveLoaderOrders.SaveData(getOrders());
+			saveLoaderDiscounts.SaveData(getAvailableDiscounts());
         } catch (SaveLoaderException e) {
             throw new RuntimeException(e);
         }
@@ -126,6 +175,28 @@ public class CoffeeShopManager {
 
 	}
 
+	public void CreateNewOrder(String itemid, String customerid){
+		Item item = null;
+		for (Item avaliableItem : getAvaliableItems()) {
+			if (avaliableItem.equals(new Item(itemid))){
+				item = avaliableItem;
+			}
+		}
+		Customer customer = null;
+		for (Customer c : CustomerData.keySet()) {
+			if(c.equals(new Customer("", UUID.fromString(customerid)))){
+				customer = c;
+			}
+		}
+		if (item == null)
+			throw new ItemNotFoundException("ITEM ID NOT FOUND");
+
+		if (customer == null)
+			throw new CustomerNotFoundException("CUSTOMER ID NOT FOUND");
+
+		CreateNewOrder(item, customer);
+	}
+
 	public void RemoveOrder(Order order) {
 		if (!CustomerData.containsKey(order._customer))
 			throw new CustomerNotFoundException("Customer not Found");
@@ -133,10 +204,11 @@ public class CoffeeShopManager {
 
 	}
 
-	public void CreateCustomer(String name) {
+	public Customer CreateCustomer(String name) {
 		Customer newCustomer = new Customer(name);
 		Bill newBill = new Bill(newCustomer);
 		CustomerData.put(newCustomer, newBill);
+		return newCustomer;
 	}
 
 	public void RemoveCustomer(Customer customer) {
@@ -176,5 +248,14 @@ public class CoffeeShopManager {
 	public void RemoveItem(Item item){
 		AvaliableItems.remove(item);
 	}
+
+	public void CreateDiscount(IDiscount discount){
+		AvailableDiscounts.add(discount);
+	}
+
+	public void RemoveDiscount(IDiscount discount){
+		AvailableDiscounts.remove(discount);
+	}
+	
 
 }

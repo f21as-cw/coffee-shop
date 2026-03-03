@@ -1,14 +1,22 @@
 package CoffeeShop;
 
+import CoffeeShop.Discounts.DiscountMealDeal;
+import CoffeeShop.Discounts.DiscountPercentage;
+import CoffeeShop.Discounts.DiscountX4X;
 import CoffeeShop.Exceptions.CustomerNotFoundException;
+import CoffeeShop.Exceptions.ItemNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import CoffeeShop.Discounts.IDiscount;
+import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -19,6 +27,9 @@ public class CSMTest {
     private List<Order> orders;
     private Item drink;
     private Item snack;
+
+    @TempDir
+    Path tempDir;
 
     @BeforeEach
     void setUp() throws ItemException {
@@ -137,7 +148,19 @@ public class CSMTest {
         CoffeeShopManager manager = new CoffeeShopManager(customers, items, orders);
         Customer nonExistent = new Customer("Unknown");
 
-        assertThrows(Exception.class, () -> manager.CreateNewOrder(drink, nonExistent));
+        assertThrows(ItemNotFoundException.class, () -> manager.CreateNewOrder("MAIN-999", customer.id.toString()));
+        assertThrows(CustomerNotFoundException.class, () -> manager.CreateNewOrder("SNACK-01", UUID.randomUUID().toString()));
+
+    }
+
+    @Test
+    void CreateNewOrder_WithIDs_Incorrect(){
+        Customer customer = new Customer("Alice");
+        customers.add(customer);
+
+        CoffeeShopManager manager = new CoffeeShopManager(customers, items, orders);
+
+        assertThrows(Exception.class, () -> manager.CreateNewOrder("MAIN-999", "randomid"));
     }
 
     @Test
@@ -175,35 +198,106 @@ public class CSMTest {
     }
 
     @Test
-    void CloseoutCustomer_WithRemoveFalse_CalculatesTotal() throws Exception {
+    void CloseoutCustomer_Error() throws Exception {
         Customer customer = new Customer("Alice");
         customers.add(customer);
         orders.add(new Order(drink, customer));
 
         CoffeeShopManager manager = new CoffeeShopManager(customers, items, orders);
 
-        assertThrows(NullPointerException.class, () -> manager.CloseoutCustomer(customer, false));
+        assertThrows(CustomerNotFoundException.class, () -> manager.CloseoutCustomer(new Customer("", UUID.randomUUID()), false));
     }
-
     @Test
-    void CloseoutCustomer_WithRemoveTrue_CalculatesTotalAndRemoves() throws Exception {
+    void CloseoutCustomer() throws Exception {
         Customer customer = new Customer("Alice");
         customers.add(customer);
         orders.add(new Order(drink, customer));
 
         CoffeeShopManager manager = new CoffeeShopManager(customers, items, orders);
 
-        assertThrows(NullPointerException.class, () -> manager.CloseoutCustomer(customer, true));
+        assertDoesNotThrow(() -> manager.CloseoutCustomer(customer, false));
+    }
+
+
+    @Test
+    void LoadTest(){
+        CoffeeShopManager.DATA_DIR = "src/test/data";
+        CoffeeShopManager csm = new CoffeeShopManager();
+        csm.LoadData();
+
+        assertEquals(15, csm.getAvaliableItems().size());
+        assertEquals(3, csm.getAvailableDiscounts().size());
+        assertEquals(3, csm.getCustomers().size());
+
+
+        Customer customer = new Customer("", UUID.fromString("bed72c83-3a21-456e-9eac-f2cbd1049359"));
+        Bill b = csm.GetCustomerBill(customer);
+        assertEquals(4, b.Orders.size());
+        assertEquals(17.5850887298584, b.GetCost());
+
+        Bill.BillInfo bi = csm.GetCustomerBillInfo(customer);
+        assertEquals(2, bi.DiscountsUsed().size());
+
+        assertEquals(2.8f, bi.FinalCost());
+
     }
 
     @Test
-    void CloseoutCustomer_WithNonExistentCustomer_ThrowsException() throws ItemException {
-        Customer customer = new Customer("Alice");
-        customers.add(customer);
+    void SaveTest(){
+        CoffeeShopManager.DATA_DIR = tempDir.toString();
+        CoffeeShopManager csm = new CoffeeShopManager();
+        Customer customer1 = csm.CreateCustomer("Bill");
+        Customer customer2 = csm.CreateCustomer("Bob");
+        Customer customer3 = csm.CreateCustomer("Bary");
 
-        CoffeeShopManager manager = new CoffeeShopManager(customers, items, orders);
-        Customer nonExistent = new Customer("Unknown");
+        List<Item> items = List.of(
+                new Item("DRINK-001", 1.5f),
+                new Item("DRINK-002", 5.5f),
+                new Item("DRINK-003", 3.5f),
+                new Item("SNACK-001", 1.5f),
+                new Item("SNACK-002", 76.5f),
+                new Item("MAIN-001", 31.5f),
+                new Item("MAIN-002", 85.5f),
+                new Item("MAIN-003", 28.5f)
+        );
 
-        assertThrows(Exception.class, () -> manager.CloseoutCustomer(nonExistent, false));
+        csm.setAvaliableItems(items);
+
+        csm.CreateNewOrder("DRINK-001", customer1.id.toString());
+        csm.CreateNewOrder("DRINK-003", customer1.id.toString());
+        csm.CreateNewOrder("SNACK-001", customer1.id.toString());
+
+        csm.CreateNewOrder("DRINK-001", customer2.id.toString());
+        csm.CreateNewOrder("MAIN-002", customer2.id.toString());
+
+        csm.CreateNewOrder("MAIN-003", customer2.id.toString());
+        csm.CreateNewOrder("SNACK-001", customer2.id.toString());
+        csm.CreateNewOrder("SNACK-001", customer2.id.toString());
+
+        csm.CreateDiscount(new DiscountPercentage(items.get(1), 0.2f));
+        ArrayList<Item> items1 = new ArrayList<>();
+        items1.add(items.get(6));
+        items1.add(items.get(1));
+        csm.CreateDiscount(new DiscountMealDeal(items1, 10f));
+
+        csm.CreateDiscount(new DiscountX4X(items.get(3), 2, 1));
+
+        csm.SaveData();
+
+        Path path = Paths.get(tempDir + "/customers.csv");
+        assertTrue(Files.exists(path), "The customer CSV file should exist");
+
+        path = Paths.get(tempDir + "/items.csv");
+        assertTrue(Files.exists(path), "The items CSV file should exist");
+
+        path = Paths.get(tempDir + "/orders.csv");
+        assertTrue(Files.exists(path), "The orders CSV file should exist");
+
+        path = Paths.get(tempDir + "/discounts.csv");
+        assertTrue(Files.exists(path), "The discounts CSV file should exist");
+
+
+
     }
+
 }
