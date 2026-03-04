@@ -64,4 +64,9 @@ public class DiscountPercentage implements IDiscount {
 				.map(realItem -> new DiscountPercentage(realItem, this._percentage))
 				.orElse(null); // Returns null if item isn't available
 	}
+
+	@Override
+	public String toString() {
+		return String.format("%s -%.0f", _item.getID(), _percentage * 100) + "% OFF";
+	}
 }
