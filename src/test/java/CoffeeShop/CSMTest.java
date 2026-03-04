@@ -1,12 +1,10 @@
 package CoffeeShop;
 
-import CoffeeShop.Discounts.DiscountMealDeal;
-import CoffeeShop.Discounts.DiscountPercentage;
-import CoffeeShop.Discounts.DiscountX4X;
-import CoffeeShop.Exceptions.CustomerNotFoundException;
-import CoffeeShop.Exceptions.ItemNotFoundException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,10 +13,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import CoffeeShop.Discounts.IDiscount;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import static org.junit.jupiter.api.Assertions.*;
+import CoffeeShop.Discounts.DiscountMealDeal;
+import CoffeeShop.Discounts.DiscountPercentage;
+import CoffeeShop.Discounts.DiscountX4X;
+import CoffeeShop.Exceptions.CustomerNotFoundException;
+import CoffeeShop.Exceptions.ItemException;
+import CoffeeShop.Exceptions.ItemNotFoundException;
 
 public class CSMTest {
 

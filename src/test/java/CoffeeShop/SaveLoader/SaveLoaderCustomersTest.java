@@ -1,9 +1,8 @@
 package CoffeeShop.SaveLoader;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-
-import CoffeeShop.Customer;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,7 +11,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import CoffeeShop.Customer;
+import CoffeeShop.Exceptions.SaveLoaderException;
+import CoffeeShop.Exceptions.SaveLoaderRuntimeException;
 
 public class SaveLoaderCustomersTest {
 
@@ -23,7 +27,7 @@ public class SaveLoaderCustomersTest {
     void LoadData_ValidCustomersFile_ReturnsCustomers() throws IOException {
         UUID uuid1 = UUID.fromString("12345678-1234-1234-1234-123456789012");
         UUID uuid2 = UUID.fromString("87654321-4321-4321-4321-210987654321");
-        
+
         Path readPath = tempDir.resolve("customers.txt");
         Files.writeString(readPath, uuid1 + ",John Doe\n" + uuid2 + ",Jane Smith\n");
 
@@ -54,7 +58,7 @@ public class SaveLoaderCustomersTest {
         Files.writeString(readPath, "invalid-uuid,John Doe\n");
 
         SaveLoaderCustomers loader = new SaveLoaderCustomers(readPath.toString(), tempDir.resolve("output.txt").toString());
-        
+
         assertThrows(IllegalArgumentException.class, () -> loader.LoadData());
     }
 
@@ -76,7 +80,7 @@ public class SaveLoaderCustomersTest {
 
         UUID uuid1 = UUID.fromString("12345678-1234-1234-1234-123456789012");
         UUID uuid2 = UUID.fromString("87654321-4321-4321-4321-210987654321");
-        
+
         List<Customer> customers = new ArrayList<>();
         customers.add(new Customer("John Doe", uuid1));
         customers.add(new Customer("Jane Smith", uuid2));
@@ -92,7 +96,7 @@ public class SaveLoaderCustomersTest {
     @Test
     void LoadData_NonExistentFile_ThrowsRuntimeException() {
         SaveLoaderCustomers loader = new SaveLoaderCustomers("/nonexistent/path/customers.txt", tempDir.resolve("output.txt").toString());
-        
+
         assertThrows(SaveLoaderRuntimeException.class, () -> loader.LoadData());
     }
 }

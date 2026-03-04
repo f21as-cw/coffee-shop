@@ -1,12 +1,7 @@
 package CoffeeShop.SaveLoader;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Locale.Category;
-
-import CoffeeShop.Exceptions.InvalidItemFormatException;
 import CoffeeShop.Item;
-import CoffeeShop.ItemException;
+import CoffeeShop.Exceptions.InvalidItemFormatException;
 
 public class SaveLoaderItems extends ASaveLoader<Item> {
 

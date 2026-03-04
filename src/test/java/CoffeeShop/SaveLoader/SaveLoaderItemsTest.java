@@ -1,10 +1,8 @@
 package CoffeeShop.SaveLoader;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-
-import CoffeeShop.Item;
-import CoffeeShop.ItemException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,7 +10,13 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import CoffeeShop.Item;
+import CoffeeShop.Exceptions.ItemException;
+import CoffeeShop.Exceptions.SaveLoaderException;
+import CoffeeShop.Exceptions.SaveLoaderRuntimeException;
 
 public class SaveLoaderItemsTest {
 

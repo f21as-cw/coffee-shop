@@ -3,8 +3,9 @@ package CoffeeShop.Discounts;
 import java.util.LinkedList;
 import java.util.List;
 
-import CoffeeShop.Order;
 import CoffeeShop.Item;
+import CoffeeShop.Order;
+import CoffeeShop.Exceptions.InvalidDiscountException;
 
 public class DiscountPercentage implements IDiscount {
 	public Item _item;
