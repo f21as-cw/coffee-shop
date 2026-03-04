@@ -1,14 +1,13 @@
 package CoffeeShop;
 
-import CoffeeShop.Discounts.DiscountsData;
-import CoffeeShop.Discounts.IDiscount;
-import CoffeeShop.Exceptions.OrderNotFoundException;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
+
+import CoffeeShop.Discounts.DiscountsData;
+import CoffeeShop.Discounts.IDiscount;
+import CoffeeShop.Exceptions.OrderNotFoundException;
 
 public class Bill {
 

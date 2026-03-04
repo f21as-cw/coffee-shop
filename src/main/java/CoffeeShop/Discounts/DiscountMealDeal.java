@@ -1,12 +1,13 @@
 package CoffeeShop.Discounts;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 
 import CoffeeShop.Item;
 import CoffeeShop.Order;
+import CoffeeShop.Exceptions.InvalidDiscountException;
 
 public class DiscountMealDeal implements IDiscount {
 	public List<Item> _items;

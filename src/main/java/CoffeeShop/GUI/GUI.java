@@ -2,6 +2,7 @@ package CoffeeShop.GUI;
 
 import CoffeeShop.*;
 import CoffeeShop.Discounts.*;
+import CoffeeShop.Exceptions.InvalidDiscountException;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -37,11 +38,11 @@ public class GUI {
 
         // Create tabbed pane for main interface
         JTabbedPane tabbedPane = new JTabbedPane();
-        
+
         // Tab 1: Order Management
         JPanel orderPanel = createOrderManagementPanel();
         tabbedPane.addTab("Orders", orderPanel);
-        
+
         // Tab 2: Discounts Management
         JPanel discountsPanel = createDiscountsPanel();
         tabbedPane.addTab("Manage Discounts", discountsPanel);
@@ -49,17 +50,17 @@ public class GUI {
         mainFrame.add(tabbedPane);
         mainFrame.setVisible(true);
     }
-    
+
     private JPanel createOrderManagementPanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         // Left panel: Customers list
         JPanel leftPanel = createCustomersPanel();
-        
+
         // Center panel: Orders and Items
         JPanel centerPanel = createOrdersPanel();
-        
+
         // Right panel: Bill details
         JPanel rightPanel = createBillPanel();
 
@@ -93,7 +94,7 @@ public class GUI {
 
         // Create buttons panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
-        
+
         JButton addCustomerBtn = new JButton("Add Customer");
         addCustomerBtn.addActionListener(e -> onAddCustomer());
         buttonPanel.add(addCustomerBtn);
@@ -121,7 +122,7 @@ public class GUI {
         // Top panel: Item selector and add order button
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
         topPanel.setBorder(BorderFactory.createTitledBorder("Add Order"));
-        
+
         topPanel.add(new JLabel("Select Item:"));
         itemsCombo = new JComboBox<>();
         itemsCombo.setPreferredSize(new Dimension(200, 30));
@@ -171,7 +172,7 @@ public class GUI {
 
         // Bottom panel with buttons
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
-        
+
         JButton calculateBillBtn = new JButton("Calculate Bill");
         calculateBillBtn.addActionListener(e -> onCalculateBill());
         bottomPanel.add(calculateBillBtn);
@@ -196,25 +197,25 @@ public class GUI {
         // Top panel: Create discount section
         JPanel createPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
         createPanel.setBorder(BorderFactory.createTitledBorder("Create New Discount"));
-        
+
         JButton percentageBtn = new JButton("Percentage Discount");
         percentageBtn.addActionListener(e -> showCreatePercentageDialog());
         createPanel.add(percentageBtn);
-        
+
         JButton mealDealBtn = new JButton("Meal Deal");
         mealDealBtn.addActionListener(e -> showCreateMealDealDialog());
         createPanel.add(mealDealBtn);
-        
+
         JButton x4xBtn = new JButton("X for Y Discount");
         x4xBtn.addActionListener(e -> showCreateX4XDialog());
         createPanel.add(x4xBtn);
-        
+
         panel.add(createPanel, BorderLayout.NORTH);
 
         // Center panel: Discounts table
         JPanel tablePanel = new JPanel(new BorderLayout());
         tablePanel.setBorder(BorderFactory.createTitledBorder("Available Discounts"));
-        
+
         DefaultTableModel discountsModel = new DefaultTableModel(
             new String[]{"Discount Type", "Details"}, 0
         ) {
@@ -223,22 +224,22 @@ public class GUI {
                 return false;
             }
         };
-        
+
         JTable discountsTable = new JTable(discountsModel);
         discountsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         discountsTable.setRowHeight(30);
-        
+
         JScrollPane scrollPane = new JScrollPane(discountsTable);
         tablePanel.add(scrollPane, BorderLayout.CENTER);
-        
+
         // Refresh discounts table
         refreshDiscountsTable(discountsModel);
-        
+
         panel.add(tablePanel, BorderLayout.CENTER);
 
         // Bottom panel: Delete button
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        
+
         JButton deleteBtn = new JButton("Delete Selected Discount");
         deleteBtn.addActionListener(e -> {
             int selectedRow = discountsTable.getSelectedRow();
@@ -258,11 +259,11 @@ public class GUI {
             }
         });
         bottomPanel.add(deleteBtn);
-        
+
         JButton refreshBtn = new JButton("Refresh");
         refreshBtn.addActionListener(e -> refreshDiscountsTable(discountsModel));
         bottomPanel.add(refreshBtn);
-        
+
         panel.add(bottomPanel, BorderLayout.SOUTH);
 
         return panel;
@@ -300,7 +301,7 @@ public class GUI {
             try {
                 Item selectedItem = (Item) itemCombo.getSelectedItem();
                 float percentage = Float.parseFloat(percentageField.getText());
-                
+
                 if (selectedItem != null) {
                     DiscountPercentage discount = new DiscountPercentage(selectedItem, percentage);
                     manager.CreateDiscount(discount);
@@ -356,7 +357,7 @@ public class GUI {
                 Item selectedItem = (Item) itemCombo.getSelectedItem();
                 int x = Integer.parseInt(xField.getText());
                 int y = Integer.parseInt(yField.getText());
-                
+
                 if (selectedItem != null) {
                     DiscountX4X discount = new DiscountX4X(selectedItem, x, y);
                     manager.CreateDiscount(discount);
@@ -386,7 +387,7 @@ public class GUI {
         // Items selection
         JPanel itemsPanel = new JPanel(new BorderLayout());
         itemsPanel.setBorder(BorderFactory.createTitledBorder("Select Items for Meal Deal"));
-        
+
         DefaultListModel<Item> listModel = new DefaultListModel<>();
         List<Item> items = manager.getAvaliableItems();
         if (items != null) {
@@ -394,12 +395,12 @@ public class GUI {
                 listModel.addElement(item);
             }
         }
-        
+
         JList<Item> itemsList = new JList<>(listModel);
         itemsList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         JScrollPane scrollPane = new JScrollPane(itemsList);
         itemsPanel.add(scrollPane, BorderLayout.CENTER);
-        
+
         contentPanel.add(itemsPanel, BorderLayout.CENTER);
 
         // Cost input
@@ -407,18 +408,18 @@ public class GUI {
         costPanel.add(new JLabel("Meal Deal Price (£):"));
         JTextField costField = new JTextField("5.0", 10);
         costPanel.add(costField);
-        
+
         contentPanel.add(costPanel, BorderLayout.SOUTH);
 
         // Buttons panel
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        
+
         JButton createBtn = new JButton("Create Meal Deal");
         createBtn.addActionListener(e -> {
             try {
                 List<Item> selectedItems = itemsList.getSelectedValuesList();
                 float cost = Float.parseFloat(costField.getText());
-                
+
                 if (selectedItems.isEmpty()) {
                     JOptionPane.showMessageDialog(dialog, "Please select at least one item", "Error", JOptionPane.ERROR_MESSAGE);
                 } else {
@@ -434,11 +435,11 @@ public class GUI {
             }
         });
         buttonsPanel.add(createBtn);
-        
+
         JButton cancelBtn = new JButton("Cancel");
         cancelBtn.addActionListener(e -> dialog.dispose());
         buttonsPanel.add(cancelBtn);
-        
+
         contentPanel.add(buttonsPanel, BorderLayout.SOUTH);
 
         dialog.add(contentPanel);
@@ -515,7 +516,7 @@ public class GUI {
 
     private void refreshBillPanel(Customer customer) {
         billDetailsPanel.removeAll();
-        
+
         Bill bill = manager.GetCustomerBill(customer);
         JLabel customerLabel = new JLabel("Customer: " + customer.name);
         customerLabel.setFont(new Font("Arial", Font.BOLD, 14));
@@ -596,9 +597,9 @@ public class GUI {
                 .orElse(null);
 
             if (customerToRemove != null) {
-                int confirm = JOptionPane.showConfirmDialog(mainFrame, 
-                    "Are you sure you want to remove " + customerName + "?", 
-                    "Confirm Delete", 
+                int confirm = JOptionPane.showConfirmDialog(mainFrame,
+                    "Are you sure you want to remove " + customerName + "?",
+                    "Confirm Delete",
                     JOptionPane.YES_NO_OPTION);
 
                 if (confirm == JOptionPane.YES_OPTION) {
@@ -687,15 +688,15 @@ public class GUI {
                     Bill.BillInfo billInfo = manager.GetCustomerBillInfo(selectedCustomer);
                     String totalCost = String.format("£%.2f", billInfo.FinalCost());
                     billTotalLabel.setText("Total: " + totalCost);
-                    
+
                     StringBuilder discountInfo = new StringBuilder("Applied Discounts:\n");
                     for (IDiscount discount : billInfo.DiscountsUsed()) {
                         discountInfo.append("- ").append(discount.toString()).append("\n");
                     }
-                    
-                    JOptionPane.showMessageDialog(mainFrame, 
-                        discountInfo.toString() + "\nFinal Total: " + totalCost, 
-                        "Bill Calculation", 
+
+                    JOptionPane.showMessageDialog(mainFrame,
+                        discountInfo.toString() + "\nFinal Total: " + totalCost,
+                        "Bill Calculation",
                         JOptionPane.INFORMATION_MESSAGE);
                 } catch (Exception e) {
                     JOptionPane.showMessageDialog(mainFrame, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
@@ -716,9 +717,9 @@ public class GUI {
                 .orElse(null);
 
             if (selectedCustomer != null) {
-                int confirm = JOptionPane.showConfirmDialog(mainFrame, 
-                    "Close out customer " + customerName + " and remove from system?", 
-                    "Confirm Closeout", 
+                int confirm = JOptionPane.showConfirmDialog(mainFrame,
+                    "Close out customer " + customerName + " and remove from system?",
+                    "Confirm Closeout",
                     JOptionPane.YES_NO_OPTION);
 
                 if (confirm == JOptionPane.YES_OPTION) {

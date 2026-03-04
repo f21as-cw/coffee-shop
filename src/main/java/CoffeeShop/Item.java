@@ -1,8 +1,8 @@
 package CoffeeShop;
 
-import CoffeeShop.Exceptions.InvalidItemFormatException;
-
 import java.util.Objects;
+
+import CoffeeShop.Exceptions.InvalidItemFormatException;
 
 public class Item {
 	float _cost;

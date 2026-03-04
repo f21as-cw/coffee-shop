@@ -1,4 +1,4 @@
-package CoffeeShop;
+package CoffeeShop.Exceptions;
 
 /**
  * ItemException
