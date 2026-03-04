@@ -1,17 +1,9 @@
 package CoffeeShop;
 
-import CoffeeShop.Discounts.DiscountMealDeal;
-import CoffeeShop.Discounts.DiscountPercentage;
-import CoffeeShop.Discounts.DiscountX4X;
-import CoffeeShop.Discounts.IDiscount;
 import CoffeeShop.GUI.GUI;
 
 import javax.swing.*;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class App {
 

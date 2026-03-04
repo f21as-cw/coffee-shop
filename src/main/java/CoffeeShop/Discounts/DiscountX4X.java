@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import CoffeeShop.Order;
+import CoffeeShop.Exceptions.InvalidDiscountException;
 import CoffeeShop.Item;
 
 public class DiscountX4X implements IDiscount {

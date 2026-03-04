@@ -1,8 +1,12 @@
 package CoffeeShop.SaveLoader;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import CoffeeShop.Exceptions.SaveLoaderException;
+import CoffeeShop.Exceptions.SaveLoaderRuntimeException;
 
 public class SaveLoaderExceptionClassesTest {
 

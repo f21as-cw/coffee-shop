@@ -1,6 +1,5 @@
 package CoffeeShop.SaveLoader;
 
-import java.io.IOException;
 import java.util.UUID;
 
 import CoffeeShop.Customer;

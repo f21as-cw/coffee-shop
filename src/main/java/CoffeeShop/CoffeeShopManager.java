@@ -1,16 +1,23 @@
 package CoffeeShop;
 
-import CoffeeShop.Discounts.DiscountMealDeal;
-import CoffeeShop.Discounts.DiscountPercentage;
-import CoffeeShop.Discounts.DiscountX4X;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.UUID;
+
 import CoffeeShop.Discounts.IDiscount;
 import CoffeeShop.Exceptions.CustomerNotFoundException;
 import CoffeeShop.Exceptions.ItemNotFoundException;
-import CoffeeShop.SaveLoader.*;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
+import CoffeeShop.Exceptions.SaveLoaderException;
+import CoffeeShop.SaveLoader.ISaveLoader;
+import CoffeeShop.SaveLoader.SaveLoaderCustomers;
+import CoffeeShop.SaveLoader.SaveLoaderDiscounts;
+import CoffeeShop.SaveLoader.SaveLoaderItems;
+import CoffeeShop.SaveLoader.SaveLoaderOrders;
 
 public class CoffeeShopManager {
 	public static final String CUSTOMERS_CSV = "customers.csv";
@@ -256,6 +263,6 @@ public class CoffeeShopManager {
 	public void RemoveDiscount(IDiscount discount){
 		AvailableDiscounts.remove(discount);
 	}
-	
+
 
 }

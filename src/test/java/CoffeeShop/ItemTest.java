@@ -1,7 +1,8 @@
 package CoffeeShop;
 
-import CoffeeShop.Exceptions.InvalidItemFormatException;
 import org.junit.jupiter.api.Test;
+
+import CoffeeShop.Exceptions.InvalidItemFormatException;
 
 public class ItemTest {
 

@@ -1,13 +1,17 @@
 package CoffeeShop;
 
-import CoffeeShop.Discounts.*;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.UUID;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import CoffeeShop.Discounts.DiscountMealDeal;
+import CoffeeShop.Discounts.DiscountPercentage;
+import CoffeeShop.Discounts.DiscountX4X;
+import CoffeeShop.Discounts.IDiscount;
+import CoffeeShop.Exceptions.InvalidDiscountException;
 
 public class BillTest {
 

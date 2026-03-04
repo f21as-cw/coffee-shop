@@ -1,16 +1,19 @@
 package CoffeeShop.Discounts;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.LinkedList;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import CoffeeShop.Order;
 import CoffeeShop.Customer;
 import CoffeeShop.Item;
-import CoffeeShop.ItemException;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.util.LinkedList;
+import CoffeeShop.Order;
+import CoffeeShop.Exceptions.InvalidDiscountException;
+import CoffeeShop.Exceptions.ItemException;
 
 public class DiscountX4XTest {
 
