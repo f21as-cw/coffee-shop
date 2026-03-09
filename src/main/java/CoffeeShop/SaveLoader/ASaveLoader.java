@@ -14,61 +14,62 @@ import CoffeeShop.Exceptions.SaveLoaderRuntimeException;
 
 abstract class ASaveLoader<T> implements ISaveLoader<T> {
 
-    private final String readPath;
-    private final String writePath;
+	private final String readPath;
+	private final String writePath;
 
-    public ASaveLoader(String readPath, String writePath) {
-        this.readPath = readPath;
-        this.writePath = writePath;
-    }
+	public ASaveLoader(String readPath, String writePath) {
+		this.readPath = readPath;
+		this.writePath = writePath;
+	}
 
-    private List<String> readFile() {
-        try (BufferedReader reader = new BufferedReader(new FileReader(readPath))) {
+	private List<String> readFile() {
+		try (BufferedReader reader = new BufferedReader(new FileReader(readPath))) {
 			return reader.lines().toList();
 		} catch (IOException e) {
-            throw new SaveLoaderRuntimeException("Failed to read file: '" + readPath + "'");
+			throw new SaveLoaderRuntimeException("Failed to read file: '" + readPath + "'");
 		}
-    }
+	}
 
-    private void writeFile(List<String> data) throws SaveLoaderException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(writePath))) {
-            for (String line : data) {
-                writer.write(line);
-                writer.newLine();
-            }
-        } catch (IOException e) {
-            throw new SaveLoaderException("Failed to write file: " + writePath);
-        }
-    }
+	private void writeFile(List<String> data) throws SaveLoaderException {
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(writePath))) {
+			for (String line : data) {
+				writer.write(line);
+				writer.newLine();
+			}
+		} catch (IOException e) {
+			throw new SaveLoaderException("Failed to write file: " + writePath);
+		}
+	}
 
-    abstract T StringToEntity(String str);
-    abstract String EntityToString(T entity);
+	abstract T StringToEntity(String str);
 
-    @Override
-    public List<T> LoadData() {
-        List<T> data = new ArrayList<>();
-        List<String> lines;
+	abstract String EntityToString(T entity);
 
-        lines = this.readFile();
+	@Override
+	public List<T> LoadData() {
+		List<T> data = new ArrayList<>();
+		List<String> lines;
 
-        for (String line : lines) {
-            T item = this.StringToEntity(line);
-            if (item != null) {
-                data.add(item);
-            }
-        }
+		lines = this.readFile();
 
-        return data;
-    }
+		for (String line : lines) {
+			T item = this.StringToEntity(line);
+			if (item != null) {
+				data.add(item);
+			}
+		}
 
-    @Override
-    public void SaveData(List<T> data) throws SaveLoaderException {
-        List<String> lines = new ArrayList<>();
+		return data;
+	}
 
-        for (T entity : data) {
-            lines.add(this.EntityToString(entity));
-        }
+	@Override
+	public void SaveData(List<T> data) throws SaveLoaderException {
+		List<String> lines = new ArrayList<>();
 
-        this.writeFile(lines);
-    }
+		for (T entity : data) {
+			lines.add(this.EntityToString(entity));
+		}
+
+		this.writeFile(lines);
+	}
 }

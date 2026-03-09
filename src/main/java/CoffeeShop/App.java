@@ -8,6 +8,7 @@ import java.util.ArrayList;
 public class App {
 
 	public static void main(String[] args) {
+		Logger.getInstance().log("App is running...");
 		// Set up Swing on the Event Dispatch Thread
 		SwingUtilities.invokeLater(() -> {
 			CoffeeShopManager csm = new CoffeeShopManager();

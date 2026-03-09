@@ -36,38 +36,41 @@ public class Bill {
 		Orders.remove(order);
 	}
 
-	public record BillInfo(List<IDiscount> DiscountsUsed, float FinalCost) {}
-	public BillInfo GetTotalCostInfo(List<IDiscount> allDiscounts){
+	public record BillInfo(List<IDiscount> DiscountsUsed, float FinalCost) {
+	}
+
+	public BillInfo GetTotalCostInfo(List<IDiscount> allDiscounts) {
 		List<Order> tmpOrders = new ArrayList<>(Orders);
 		List<IDiscount> DiscountsUsed = new ArrayList<>();
 
 		float totalCost = GetCost();
 		for (IDiscount discount : allDiscounts) {
-			System.out.println("Discount - " + discount.toString());
+			Logger.getInstance().log(
+					"Discount - " + discount.toString());
 			DiscountsData Data = discount.DiscountEval(tmpOrders);
 			for (Order order : Data.OrdersUsed()) {
-				System.out.println("	Order " + order);
+				Logger.getInstance().log("\tOrder " + order);
 			}
 			totalCost -= Data.CostChange();
 			if (Data.CostChange() != 0)
 				DiscountsUsed.add(discount);
-			System.out.println("		Cost Change - £" + Data.CostChange());
+			Logger.getInstance().log("\t\tCost Change - £" + Data.CostChange());
 			tmpOrders.removeAll(Data.OrdersUsed());
 		}
 
-		//TO remove floating point shenanigans
+		// TO remove floating point shenanigans
 		totalCost = BigDecimal.valueOf(totalCost)
 				.setScale(2, RoundingMode.HALF_UP)
 				.floatValue();
-		System.out.println("Final Cost : £" + totalCost);
+		Logger.getInstance().log("Final Cost : £" + totalCost);
 		return new BillInfo(DiscountsUsed, totalCost);
 	}
 
-	public float GetTotalCost(List<IDiscount> allDiscounts){
+	public float GetTotalCost(List<IDiscount> allDiscounts) {
 		return GetTotalCostInfo(allDiscounts).FinalCost;
 	}
 
-	public float GetCost(){
+	public float GetCost() {
 		float _cost = 0;
 		for (Order order : Orders) {
 			_cost += order.getItem().getCost();
