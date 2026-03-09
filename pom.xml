@@ -10,6 +10,10 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.release>17</maven.compiler.release>
+		<maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
+		<maven.compiler.testSource>${maven.compiler.source}</maven.compiler.testSource>
+		<maven.compiler.testTarget>${maven.compiler.testSource}</maven.compiler.testTarget>
+		<mainClass>CoffeeShop.App</mainClass>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -21,6 +25,18 @@
 	</dependencies>
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.3.0</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>CoffeeShop.App</mainClass>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>

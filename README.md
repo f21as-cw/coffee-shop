@@ -23,3 +23,12 @@ open target/site/jacoco/index.html
 ```bash
 mvn test
 ```
+
+## (Extra) Building JAR Executable
+
+```bash
+mvn clean package
+
+# .jar file should be inside target/
+ls -1 target
+```
