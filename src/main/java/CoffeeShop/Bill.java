@@ -44,6 +44,8 @@ public class Bill {
 		List<IDiscount> DiscountsUsed = new ArrayList<>();
 
 		float totalCost = GetCost();
+		Logger.getInstance().log("Calculating bill for customer: " + customer.name);
+		Logger.getInstance().log("Subtotal : £" + totalCost);
 		for (IDiscount discount : allDiscounts) {
 			Logger.getInstance().log(
 					"Discount - " + discount.toString());

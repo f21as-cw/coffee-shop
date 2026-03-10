@@ -107,12 +107,17 @@ public class CoffeeShopManager {
 	}
 
 	public void LoadData() {
+		Logger.getInstance().log("Loading data...");
 		List<Customer> customers = saveLoaderCustomers.LoadData();
 		List<Item> items = saveLoaderItems.LoadData();
 
 		List<IDiscount> loadeddiscounts = saveLoaderDiscounts.LoadData();
 
 		List<Order> loadedorders = saveLoaderOrders.LoadData();
+		Logger.getInstance().log("Loaded customers: " + customers.size());
+		Logger.getInstance().log("Loaded items: " + items.size());
+		Logger.getInstance().log("Loaded orders: " + loadedorders.size());
+		Logger.getInstance().log("Loaded discounts: " + loadeddiscounts.size());
 
 		AvaliableItems = items;
 		for (Customer customer : customers) {
@@ -122,11 +127,16 @@ public class CoffeeShopManager {
 
 		// Link orders
 		List<Order> orders = new ArrayList<>();
+		int skippedOrders = 0;
 		for (Order order : loadedorders) {
-			if (!CustomerData.containsKey(order.getCustomer()))
+			if (!CustomerData.containsKey(order.getCustomer())) {
+				skippedOrders++;
 				continue;
-			if (!AvaliableItems.contains(order.getItem()))
+			}
+			if (!AvaliableItems.contains(order.getItem())) {
+				skippedOrders++;
 				continue;
+			}
 
 			Customer customer = CustomerData.keySet().stream()
 					.filter(o -> o.equals(order.getCustomer()))
@@ -149,24 +159,42 @@ public class CoffeeShopManager {
 			CustomerData.get(order._customer).addOrder(order);
 			;
 		}
+		Logger.getInstance().log("Linked orders: " + orders.size());
+		if (skippedOrders > 0) {
+			Logger.getInstance().log("Skipped orders: " + skippedOrders);
+		}
 
 		// Discount linking
+		int linkedDiscounts = 0;
 		for (IDiscount loaded : loadeddiscounts) {
 			IDiscount linked = loaded.linkToRealItems(getAvaliableItems());
 
 			if (linked != null) {
 				CreateDiscount(linked);
+				linkedDiscounts++;
 			}
 		}
+		Logger.getInstance().log("Linked discounts: " + linkedDiscounts);
 	}
 
 	public void SaveData() {
 		try {
-			saveLoaderCustomers.SaveData(getCustomers());
-			saveLoaderItems.SaveData(getAvaliableItems());
-			saveLoaderOrders.SaveData(getOrders());
-			saveLoaderDiscounts.SaveData(getAvailableDiscounts());
+			Logger.getInstance().log("Saving data...");
+			List<Customer> customers = getCustomers();
+			List<Item> items = getAvaliableItems();
+			List<Order> orders = getOrders();
+			List<IDiscount> discounts = getAvailableDiscounts();
+			Logger.getInstance().log("\tCustomers: " + customers.size());
+			Logger.getInstance().log("\tItems: " + items.size());
+			Logger.getInstance().log("\tOrders: " + orders.size());
+			Logger.getInstance().log("\tDiscounts: " + discounts.size());
+			saveLoaderCustomers.SaveData(customers);
+			saveLoaderItems.SaveData(items);
+			saveLoaderOrders.SaveData(orders);
+			saveLoaderDiscounts.SaveData(discounts);
+			Logger.getInstance().log("Save complete.");
 		} catch (SaveLoaderException e) {
+			Logger.getInstance().log("Save failed: " + e.getMessage());
 			throw new RuntimeException(e);
 		}
 
@@ -200,10 +228,12 @@ public class CoffeeShopManager {
 
 		Order newOrder = new Order(item, customer);
 		customerBill.addOrder(newOrder);
+		Logger.getInstance().log("Order created: " + newOrder);
 
 	}
 
 	public void CreateNewOrder(String itemid, String customerid) {
+		Logger.getInstance().log("Creating order from ids: item=" + itemid + ", customer=" + customerid);
 		Item item = null;
 		for (Item avaliableItem : getAvaliableItems()) {
 			if (avaliableItem.equals(new Item(itemid))) {
@@ -229,6 +259,7 @@ public class CoffeeShopManager {
 		if (!CustomerData.containsKey(order._customer))
 			throw new CustomerNotFoundException("Customer not Found");
 		CustomerData.get(order._customer).RemoveOrder(order);
+		Logger.getInstance().log("Order removed: " + order);
 
 	}
 
@@ -236,6 +267,7 @@ public class CoffeeShopManager {
 		Customer newCustomer = new Customer(name);
 		Bill newBill = new Bill(newCustomer);
 		CustomerData.put(newCustomer, newBill);
+		Logger.getInstance().log("Customer created: " + newCustomer);
 		return newCustomer;
 	}
 
@@ -243,11 +275,13 @@ public class CoffeeShopManager {
 		if (!CustomerData.containsKey(customer))
 			throw new CustomerNotFoundException("Customer not Found");
 		CustomerData.remove(customer);
+		Logger.getInstance().log("Customer removed: " + customer);
 	}
 
 	public void CloseoutCustomer(Customer customer, boolean Remove) {
 		if (!CustomerData.containsKey(customer))
 			throw new CustomerNotFoundException("Customer is not found");
+		Logger.getInstance().log("Closing out customer: " + customer + " (remove=" + Remove + ")");
 
 		Bill bill = CustomerData.get(customer);
 
@@ -271,18 +305,22 @@ public class CoffeeShopManager {
 
 	public void AddItem(Item item) {
 		AvaliableItems.add(item);
+		Logger.getInstance().log("Item added: " + item);
 	}
 
 	public void RemoveItem(Item item) {
 		AvaliableItems.remove(item);
+		Logger.getInstance().log("Item removed: " + item);
 	}
 
 	public void CreateDiscount(IDiscount discount) {
 		AvailableDiscounts.add(discount);
+		Logger.getInstance().log("Discount added: " + discount);
 	}
 
 	public void RemoveDiscount(IDiscount discount) {
 		AvailableDiscounts.remove(discount);
+		Logger.getInstance().log("Discount removed: " + discount);
 	}
 
 }
