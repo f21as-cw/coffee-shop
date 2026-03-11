@@ -106,4 +106,11 @@ public class DiscountMealDeal implements IDiscount {
 				? new DiscountMealDeal(linked, this._cost)
 				: null;
 	}
+
+	@Override
+	public String toString() {
+		List<String> ids = _items.stream().map(Item::getID).toList();
+		String itemsStr = String.join(" + ", ids);
+		return String.format("Meal deal: %s = £%.2f", itemsStr, _cost);
+	}
 }

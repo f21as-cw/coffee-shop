@@ -72,4 +72,9 @@ public class DiscountX4X implements IDiscount {
 				.map(realItem -> new DiscountX4X(realItem, this._x, this._y))
 				.orElse(null); // Returns null if item isn't available
 	}
+
+	@Override
+	public String toString() {
+		return _item + " buy " + _y + " get " + _x;
+	}
 }
