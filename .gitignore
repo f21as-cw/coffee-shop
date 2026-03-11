@@ -12,3 +12,6 @@ target
 # VS Code
 .vscode/
 
+# Logs
+app.log
+
