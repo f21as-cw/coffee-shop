@@ -13,25 +13,28 @@ public class SaveLoaderItems extends ASaveLoader<Item> {
 	Item StringToEntity(String str) {
 		String[] values = str.split(",");
 
-		if (values.length < 3) {
-			// There is missing information
+		if (values.length < 4) {
 			return null;
 		}
 
 		String id = values[0];
 		String cost = values[1];
-		String description = values[2];
+		String duration = values[2];
+		String description = values[3];
 
-		Float parsedFloat;
+		int parsedDuration = 0;
+		Float parsedCost;
 		try {
-			parsedFloat = Float.parseFloat(cost);
+			parsedDuration = Integer.parseInt(duration);
+			parsedCost = Float.parseFloat(cost);
 		}
 		catch (NumberFormatException e) {
 			return null;
 		}
 
+
 		try {
-			return new Item(id, parsedFloat, description);
+			return new Item(id, parsedCost, parsedDuration, description);
 		} catch (InvalidItemFormatException e) {
 			return null;
 		}
@@ -41,9 +44,10 @@ public class SaveLoaderItems extends ASaveLoader<Item> {
 	String EntityToString(Item entity) {
 		String id = entity.getID().toString();
 		float cost = entity.getCost();
+		int duration = entity.getDuration();
 		String description = entity.getDescription();
 
-		return id + "," + cost + "," + description;
+		return id + "," + cost + "," + duration + "," + description;
 	}
 
 
