@@ -2,12 +2,9 @@ package CoffeeShop;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 import CoffeeShop.Discounts.IDiscount;
 import CoffeeShop.Exceptions.CustomerNotFoundException;
@@ -18,6 +15,9 @@ import CoffeeShop.SaveLoader.SaveLoaderCustomers;
 import CoffeeShop.SaveLoader.SaveLoaderDiscounts;
 import CoffeeShop.SaveLoader.SaveLoaderItems;
 import CoffeeShop.SaveLoader.SaveLoaderOrders;
+import CoffeeShop.Server.OrderQueue;
+import CoffeeShop.Server.ProcessedOrdersHashMap;
+import CoffeeShop.Server.Server;
 
 public class CoffeeShopManager {
 	public static final String CUSTOMERS_CSV = "customers.csv";
@@ -56,6 +56,12 @@ public class CoffeeShopManager {
 	private ISaveLoader<Item> saveLoaderItems;
 	private ISaveLoader<Customer> saveLoaderCustomers;
 	private ISaveLoader<IDiscount> saveLoaderDiscounts;
+
+	private OrderQueue orderQueue = new OrderQueue(new LinkedBlockingQueue<>());
+	private ProcessedOrdersHashMap processedOrders = new ProcessedOrdersHashMap();
+	private ExecutorService executorService = Executors.newCachedThreadPool();
+	private Map<UUID, Future<?>> activeServers = new HashMap<>();
+	private Map<UUID, Server> serverStatusMap = new HashMap<>();
 
 	public CoffeeShopManager() {
 		Path dataDir = Paths.get(DATA_DIR);
@@ -216,6 +222,56 @@ public class CoffeeShopManager {
 
 	}
 
+	public void submitOrder(Order order){
+
+	}
+
+	public UUID addServer(){
+		UUID id = UUID.randomUUID();
+		Server server = new Server(id, orderQueue, processedOrders);
+		Future<?> controller = executorService.submit(server);
+		serverStatusMap.put(id, server);
+		activeServers.put(id, controller);
+
+		Logger.getInstance().log("Server " + id + " added");
+		return id;
+	}
+
+	public void removeServer(UUID id){
+		Future<?> controller = activeServers.get(id);
+		if (controller != null) {
+			// interrupt() triggers the InterruptedException in your Server's run() method
+			controller.cancel(true);
+			activeServers.remove(id);
+			Logger.getInstance().log("Server " + id + " removed");
+			serverStatusMap.remove(id);
+		}
+	}
+
+	public void sumbitOrder(Order order){
+		orderQueue.addOrder(order);
+	}
+
+	public record ServerStatus(UUID id, float progress, String status){}
+	public Map<UUID, ServerStatus> getAllProgress() {
+		Map<UUID, ServerStatus> report = new HashMap<>();
+
+		serverStatusMap.forEach((id, server) -> {
+			// Only report if the thread is still actually running
+			Future<?> task = activeServers.get(id);
+			if (task != null && !task.isDone()) {
+				report.put(id, new ServerStatus(
+						id,
+						server.getProgress(),
+						server.getStatus()
+				));
+			}
+		});
+
+		return report;
+	}
+
+
 	public void CreateNewOrder(Item item, Customer customer) {
 
 		if (!CustomerData.containsKey(customer))
@@ -228,6 +284,7 @@ public class CoffeeShopManager {
 
 		Order newOrder = new Order(item, customer);
 		customerBill.addOrder(newOrder);
+		sumbitOrder(newOrder);
 		Logger.getInstance().log("Order created: " + newOrder);
 
 	}
