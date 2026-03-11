@@ -26,7 +26,7 @@ public class SaveLoaderItemsTest {
     @Test
     void LoadData_ValidItemsFile_ReturnsItems() throws IOException {
         Path readPath = tempDir.resolve("items.txt");
-        Files.writeString(readPath, "DRINK-01,2.50,Coffee\nSNACK-01,3.75,Tea\n");
+        Files.writeString(readPath, "DRINK-01,2.50,2,Coffee\nSNACK-01,3.75,3,Tea\n");
 
         SaveLoaderItems loader = new SaveLoaderItems(readPath.toString(), tempDir.resolve("output.txt").toString());
         List<Item> items = loader.LoadData();
@@ -34,9 +34,11 @@ public class SaveLoaderItemsTest {
         assertEquals(2, items.size());
         assertEquals("DRINK-01", items.get(0).getID());
         assertEquals(2.50f, items.get(0).getCost());
+        assertEquals(2, items.get(0).getDuration());
         assertEquals("Coffee", items.get(0).getDescription());
         assertEquals("SNACK-01", items.get(1).getID());
         assertEquals(3.75f, items.get(1).getCost());
+        assertEquals(3, items.get(1).getDuration());
         assertEquals("Tea", items.get(1).getDescription());
     }
 
@@ -63,9 +65,9 @@ public class SaveLoaderItemsTest {
     }
 
     @Test
-    void LoadData_NegativeCost_ReturnsNull() throws IOException {
+    void LoadData_NegativeCost_ReturnsItems() throws IOException {
         Path readPath = tempDir.resolve("items.txt");
-        Files.writeString(readPath, "DRINK-01,-1.0,Coffee\n");
+        Files.writeString(readPath, "DRINK-01,-1.0,2,Coffee\n");
 
         SaveLoaderItems loader = new SaveLoaderItems(readPath.toString(), tempDir.resolve("output.txt").toString());
         List<Item> items = loader.LoadData();
@@ -90,15 +92,15 @@ public class SaveLoaderItemsTest {
         SaveLoaderItems loader = new SaveLoaderItems(tempDir.resolve("input.txt").toString(), writePath.toString());
 
         List<Item> items = new ArrayList<>();
-        items.add(new Item("DRINK-01", 2.50f, "Coffee"));
-        items.add(new Item("SNACK-01", 3.75f, "Tea"));
+        items.add(new Item("DRINK-01", 2.50f, 2, "Coffee"));
+        items.add(new Item("SNACK-01", 3.75f, 3, "Tea"));
 
         loader.SaveData(items);
 
         List<String> lines = Files.readAllLines(writePath);
         assertEquals(2, lines.size());
-        assertEquals("DRINK-01,2.5,Coffee", lines.get(0));
-        assertEquals("SNACK-01,3.75,Tea", lines.get(1));
+        assertEquals("DRINK-01,2.5,2,Coffee", lines.get(0));
+        assertEquals("SNACK-01,3.75,3,Tea", lines.get(1));
     }
 
     @Test
@@ -116,7 +118,7 @@ public class SaveLoaderItemsTest {
         SaveLoaderItems loader = new SaveLoaderItems(tempDir.resolve("input.txt").toString(), invalidPath.toString());
 
         List<Item> items = new ArrayList<>();
-        items.add(new Item("DRINK-01", 2.50f, "Coffee"));
+        items.add(new Item("DRINK-01", 2.50f, 2, "Coffee"));
 
         SaveLoaderException exception = assertThrows(SaveLoaderException.class, () -> loader.SaveData(items));
         assertTrue(exception.getMessage().contains("Failed to write file"));

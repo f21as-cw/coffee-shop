@@ -6,53 +6,35 @@ import CoffeeShop.Exceptions.InvalidItemFormatException;
 
 public class Item {
 	float _cost;
-
-	public Category getCategory() {
-		return _category;
-	}
-
-	public void setCategory(Category _category) {
-		this._category = _category;
-	}
-
+	/**
+	 * Duration in seconds that the item needs to be processed for
+	 */
+	int _duration;
 	Category _category;
 	int _IDNum;
-
-	public String getDescription() {
-		return _Description;
-	}
-
-	public void setDescription(String _Description) {
-		this._Description = _Description;
-	}
-
 	String _Description;
-
-	public String getIconPath() {
-		return _IconPath;
-	}
-
-	public void setIconPath(String _IconPath) {
-		this._IconPath = _IconPath;
-	}
-
 	String _IconPath;
 	String _ID;
 
 	public Item(String id){
-		this(id, 0, "", "");
+		this(id, 0, 0, "", "");
 	}
 
 	public Item(String id, float cost) {
-		this(id, cost, "", "");
+		this(id, cost, 0, "", "");
 	}
 
-	public Item(String id, float cost, String description){
-		this(id, cost, description, "");
+	public Item(String id, float cost, int duration) {
+		this(id, cost, duration, "", "");
 	}
 
-	public Item(String id, float cost, String description, String iconpath){
+	public Item(String id, float cost, int duration, String description){
+		this(id, cost, duration, description, "");
+	}
+
+	public Item(String id, float cost, int duration, String description, String iconpath){
 		this._cost = cost;
+		this._duration = duration;
 		this._Description = description;
 		this._IconPath = iconpath;
 
@@ -81,6 +63,38 @@ public class Item {
 
 	public void setCost(float cost) {
 		_cost = cost;
+	}
+
+	public int getDuration() {
+		return _duration;
+	}
+
+	public void setDuration(int duration) {
+		this._duration = duration;
+	}
+
+	public Category getCategory() {
+		return _category;
+	}
+
+	public void setCategory(Category _category) {
+		this._category = _category;
+	}
+
+	public String getDescription() {
+		return _Description;
+	}
+
+	public void setDescription(String _Description) {
+		this._Description = _Description;
+	}
+
+	public String getIconPath() {
+		return _IconPath;
+	}
+
+	public void setIconPath(String _IconPath) {
+		this._IconPath = _IconPath;
 	}
 
 	public boolean equals(Object obj) {

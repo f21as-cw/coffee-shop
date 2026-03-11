@@ -31,7 +31,7 @@ public class Order {
 		return _customer;
 	}
 
-	public void setSustomer(Customer customer) {
+	public void setCustomer(Customer customer) {
 		this._customer = _customer;
 	}
 

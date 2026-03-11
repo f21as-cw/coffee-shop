@@ -32,7 +32,7 @@ public class SaveLoaderOrdersTest {
         Files.writeString(readPath, customerId + ",DRINK-01\n");
 
         List<Item> items = new ArrayList<>();
-        items.add(new Item("DRINK-01", 2.50f, "Coffee"));
+        items.add(new Item("DRINK-01", 2.50f, 2, "Coffee"));
 
         List<Customer> customers = new ArrayList<>();
         customers.add(new Customer("John Doe", customerId));
@@ -53,7 +53,7 @@ public class SaveLoaderOrdersTest {
         Files.writeString(readPath, customerId + "\n");
 
         List<Item> items = new ArrayList<>();
-        items.add(new Item("DRINK-01", 2.50f, "Coffee"));
+        items.add(new Item("DRINK-01", 2.50f, 2, "Coffee"));
 
         List<Customer> customers = new ArrayList<>();
         customers.add(new Customer("John Doe", customerId));
@@ -72,7 +72,7 @@ public class SaveLoaderOrdersTest {
         Files.writeString(readPath, "invalid-customer-id,DRINK-01\n");
 
         List<Item> items = new ArrayList<>();
-        items.add(new Item("DRINK-01", 2.50f, "Coffee"));
+        items.add(new Item("DRINK-01", 2.50f, 2, "Coffee"));
 
         List<Customer> customers = new ArrayList<>();
         customers.add(new Customer("John Doe", customerId));
@@ -91,7 +91,7 @@ public class SaveLoaderOrdersTest {
         Files.writeString(readPath, customerId + ",INVALID-ITEM\n");
 
         List<Item> items = new ArrayList<>();
-        items.add(new Item("DRINK-01", 2.50f, "Coffee"));
+        items.add(new Item("DRINK-01", 2.50f, 2, "Coffee"));
 
         List<Customer> customers = new ArrayList<>();
         customers.add(new Customer("John Doe", customerId));
@@ -123,7 +123,7 @@ public class SaveLoaderOrdersTest {
         Path writePath = tempDir.resolve("output.txt");
 
         List<Item> items = new ArrayList<>();
-        items.add(new Item("DRINK-01", 2.50f, "Coffee"));
+        items.add(new Item("DRINK-01", 2.50f, 2, "Coffee"));
 
         List<Customer> customers = new ArrayList<>();
         customers.add(new Customer("John Doe", customerId));
@@ -149,8 +149,8 @@ public class SaveLoaderOrdersTest {
         Files.writeString(readPath, customerId1 + ",DRINK-01\n" + customerId2 + ",SNACK-01\n");
 
         List<Item> items = new ArrayList<>();
-        items.add(new Item("DRINK-01", 2.50f, "Coffee"));
-        items.add(new Item("SNACK-01", 3.50f, "Tea"));
+        items.add(new Item("DRINK-01", 2.50f, 2, "Coffee"));
+        items.add(new Item("SNACK-01", 3.50f, 3, "Tea"));
 
         List<Customer> customers = new ArrayList<>();
         customers.add(new Customer("John Doe", customerId1));
