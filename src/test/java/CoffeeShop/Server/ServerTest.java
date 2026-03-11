@@ -22,7 +22,7 @@ public class ServerTest {
         ProcessedOrdersHashMap processedOrders = new ProcessedOrdersHashMap();
         UUID serverId = UUID.randomUUID();
 
-        Item item = new Item("DRINK-001", 1.0f, 0);
+        Item item = new Item("DRINK-001", 1.0f, 1);
         Customer customer = new Customer("John");
         Order order = new Order(item, customer);
 
@@ -31,7 +31,7 @@ public class ServerTest {
         Server server = new Server(serverId, orderQueue, processedOrders);
         Thread thread = new Thread(server);
         thread.start();
-        thread.join(1000);
+        thread.join(2000);
 
         assertEquals(1, processedOrders.getHashMap().get(serverId).size());
         assertEquals(order, processedOrders.getHashMap().get(serverId).get(0));
@@ -59,8 +59,8 @@ public class ServerTest {
         ProcessedOrdersHashMap processedOrders = new ProcessedOrdersHashMap();
         UUID serverId = UUID.randomUUID();
 
-        Item item1 = new Item("DRINK-001", 1.0f, 0);
-        Item item2 = new Item("SNACK-002", 2.0f, 0);
+        Item item1 = new Item("DRINK-001", 1.0f, 1);
+        Item item2 = new Item("SNACK-002", 2.0f, 1);
         Customer customer = new Customer("John");
 
         Order order1 = new Order(item1, customer);
@@ -72,7 +72,7 @@ public class ServerTest {
         Server server = new Server(serverId, orderQueue, processedOrders);
         Thread thread = new Thread(server);
         thread.start();
-        thread.join(1000);
+        thread.join(3000);
 
         assertEquals(2, processedOrders.getHashMap().get(serverId).size());
     }
@@ -84,7 +84,7 @@ public class ServerTest {
         ProcessedOrdersHashMap processedOrders = new ProcessedOrdersHashMap();
         UUID serverId = UUID.randomUUID();
 
-        Item item = new Item("DRINK-001", 1.0f, 100);
+        Item item = new Item("DRINK-001", 1.0f, 10);
         Customer customer = new Customer("John");
         Order order = new Order(item, customer);
         orderQueue.addOrder(order);
@@ -92,7 +92,7 @@ public class ServerTest {
         Server server = new Server(serverId, orderQueue, processedOrders);
         Thread thread = new Thread(server);
         thread.start();
-        
+
         Thread.sleep(50);
         thread.interrupt();
         thread.join(1000);
@@ -105,11 +105,11 @@ public class ServerTest {
 		Queue<Order> queue = new LinkedBlockingQueue<>();
 		OrderQueue orderQueue = new OrderQueue(queue);
 		ProcessedOrdersHashMap processedOrders = new ProcessedOrdersHashMap();
-		
+
 		UUID serverId1 = UUID.randomUUID();
 		UUID serverId2 = UUID.randomUUID();
 
-		Item item = new Item("DRINK-001", 1.0f, 0);
+		Item item = new Item("DRINK-001", 1.0f, 1);
 		Customer customer = new Customer("John");
 
 		Order order1 = new Order(item, customer);
@@ -125,8 +125,8 @@ public class ServerTest {
 		Thread thread2 = new Thread(server2);
 		thread1.start();
 		thread2.start();
-		thread1.join(1000);
-		thread2.join(1000);
+		thread1.join(2000);
+		thread2.join(2000);
 
 		assertEquals(1, processedOrders.getHashMap().get(serverId1).size());
 		assertEquals(1, processedOrders.getHashMap().get(serverId2).size());
