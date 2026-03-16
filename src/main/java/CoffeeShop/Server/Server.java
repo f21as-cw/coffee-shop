@@ -9,7 +9,7 @@ public class Server implements Runnable {
 	private final OrderQueue orderQueue;
 	private final ProcessedOrdersHashMap processedOrders;
 	private final UUID id;
-	
+
 	private volatile String status = "Idle";
 	private volatile float progress = 0.0f;
 
@@ -25,12 +25,18 @@ public class Server implements Runnable {
 	@Override
 	public void run() {
 		try{
+			orderQueue.isQueueStarted();
+			Logger.getInstance().log("Starting Server Thread " + id);
 			while (!Thread.currentThread().isInterrupted()){
 				status = "Waiting for new Order...";
 				Order order = this.orderQueue.getOrder();
-				if (order == null) break;
+				if (order == null){
+					Logger.getInstance().log("No Orders in Queue, terminating server");
+					break;
+				}
 				long dur = order.getItem().getDuration();
 				for (int i = 0; i < 100; i++) {
+					if (Thread.currentThread().isInterrupted()) return;
 					this.progress = (float) i / 100;
 					this.status = "Processing Order " + order.getItem().getID() + " : [" + progress * 100 + "%]";
 					Thread.sleep((dur * 1000L) / 100);

@@ -36,31 +36,17 @@ public class App {
 		//THIS IS JUST FOR TESTING, FEEL FREE TO REMOVE
 		CoffeeShopManager csm = new CoffeeShopManager();
 		csm.LoadData();
-		csm.addServer();
-		csm.addServer();
-		csm.addServer();
 
 		csm.CreateNewOrder("DRINK-001", "bed72c83-3a21-456e-9eac-f2cbd1049359");
 		csm.CreateNewOrder("MAIN-003", "bed72c83-3a21-456e-9eac-f2cbd1049359");
 		csm.CreateNewOrder("SNACK-002", "bed72c83-3a21-456e-9eac-f2cbd1049359");
 		csm.CreateNewOrder("DRINK-002", "bed72c83-3a21-456e-9eac-f2cbd1049359");
 
-		Scanner scanner = new Scanner(System.in);
-		while (true) {
-			// This line pauses the 'main' thread until you press Enter
-			scanner.nextLine();
-			csm.CreateNewOrder("DRINK-002", "bed72c83-3a21-456e-9eac-f2cbd1049359");;
+		csm.addServer();
+		csm.addServer();
+		csm.addServer();
 
-			System.out.print("\033[H\033[2J");
-			System.out.flush();
-			// 3. Call your "On-Demand" status function
-			System.out.println("\n--- LIVE STATUS ---");
-			System.out.println(csm.getAllProgress().size());
-			csm.getAllProgress().forEach((id, status) -> {
-				System.out.println(id.toString() + " : " + status.status());
-			});
-			System.out.println("-------------------\nPress Enter to refresh again...");
-		}
+		csm.Start();
 
 	}
 }

@@ -14,13 +14,18 @@ public class OrderQueue {
 	}
 	public synchronized void addOrder(Order order) {
 		queue.add(order);
-		this.notify();
 	}
 
 	public synchronized Order getOrder() throws InterruptedException {
-		while (queue.isEmpty()) {
-			this.wait();
-		}
 		return queue.poll();
 	}
+
+	public synchronized void isQueueStarted() throws InterruptedException {
+		this.wait();
+	}
+
+	public synchronized void StartQueue(){
+		this.notifyAll();
+	}
+
 }

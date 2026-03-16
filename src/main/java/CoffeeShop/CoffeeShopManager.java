@@ -232,8 +232,8 @@ public class CoffeeShopManager {
 		Future<?> controller = executorService.submit(server);
 		serverStatusMap.put(id, server);
 		activeServers.put(id, controller);
-
 		Logger.getInstance().log("Server " + id + " added");
+
 		return id;
 	}
 
@@ -246,6 +246,11 @@ public class CoffeeShopManager {
 			Logger.getInstance().log("Server " + id + " removed");
 			serverStatusMap.remove(id);
 		}
+	}
+
+	public void Start(){
+		orderQueue.StartQueue();
+		executorService.shutdown();
 	}
 
 	public void sumbitOrder(Order order){
