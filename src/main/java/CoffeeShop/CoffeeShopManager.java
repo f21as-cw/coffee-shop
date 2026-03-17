@@ -249,7 +249,7 @@ public class CoffeeShopManager {
 	}
 
 	public void Start(){
-		orderQueue.StartQueue();
+		orderQueue.startQueue();
 		executorService.shutdown();
 	}
 

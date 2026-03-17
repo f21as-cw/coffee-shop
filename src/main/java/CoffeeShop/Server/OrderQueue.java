@@ -24,7 +24,7 @@ public class OrderQueue {
 		this.wait();
 	}
 
-	public synchronized void StartQueue(){
+	public synchronized void startQueue(){
 		this.notifyAll();
 	}
 
