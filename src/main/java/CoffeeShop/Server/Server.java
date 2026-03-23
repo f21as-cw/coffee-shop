@@ -43,7 +43,7 @@ public class Server implements Runnable {
 				}
 				processedOrders.addOrder(this.id, order);
 				this.progress = 0.0f;
-				Logger.getInstance().log("Order " + order.getItem().getID() + "completed");
+				Logger.getInstance().log("Order " + order.getItem().getID() + " completed");
 			}
 		} catch (InterruptedException exc) {
 			Thread.currentThread().interrupt();
