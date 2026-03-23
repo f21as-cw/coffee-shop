@@ -250,7 +250,7 @@ public class CoffeeShopManager {
 
 	public void Start(){
 		orderQueue.startQueue();
-		executorService.shutdown();
+		//executorService.shutdown();
 	}
 
 	public void sumbitOrder(Order order){

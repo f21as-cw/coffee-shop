@@ -235,7 +235,7 @@ public class GUI {
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
         refreshServersTable();
-        serverRefreshTimer = new javax.swing.Timer(1000, e -> refreshServersTable());
+        serverRefreshTimer = new javax.swing.Timer(100, e -> refreshServersTable());
         serverRefreshTimer.start();
 
         return panel;
@@ -273,7 +273,7 @@ public class GUI {
             int processed = processedByServer.getOrDefault(id, 0);
             serversModel.addRow(new Object[] {
                 id.toString(),
-                status != null ? status.status() : "Stopped",
+                status != null ? status.status() : "Removed",
                 status != null ? String.format("%.0f%%", status.progress() * 100.0f) : "0%",
                 processed
             });
@@ -468,10 +468,10 @@ public class GUI {
     }
 
     private void onAddServer() {
-        if (queueStarted) {
-            JOptionPane.showMessageDialog(mainFrame, "Queue already started. Add servers before starting queue.", "Warning", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
+//        if (queueStarted) {
+//            JOptionPane.showMessageDialog(mainFrame, "Queue already started. Add servers before starting queue.", "Warning", JOptionPane.WARNING_MESSAGE);
+//            return;
+//        }
 
         try {
             UUID id = manager.addServer();
@@ -526,12 +526,12 @@ public class GUI {
                 for (Order order : startupOrders) {
                     manager.sumbitOrder(order);
                     Logger.getInstance().log("Order queued from startup data: " + order);
-                    try {
-                        Thread.sleep(120);
-                    } catch (InterruptedException ignored) {
-                        Thread.currentThread().interrupt();
-                        break;
-                    }
+//                    try {
+//                        Thread.sleep(1);
+//                    } catch (InterruptedException ignored) {
+//                        Thread.currentThread().interrupt();
+//                        break;
+//                    }
                 }
 
                 SwingUtilities.invokeLater(() -> startQueueProcessing(startupOrders.size()));

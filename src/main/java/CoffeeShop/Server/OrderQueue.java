@@ -8,6 +8,7 @@ import CoffeeShop.Order;
 
 public class OrderQueue {
 	Queue<Order> queue;
+	private boolean isQueueStarted = false;
 
 	public OrderQueue(Queue<Order> queue) {
 		this.queue = queue;
@@ -21,10 +22,13 @@ public class OrderQueue {
 	}
 
 	public synchronized void isQueueStarted() throws InterruptedException {
+		if (isQueueStarted)
+				return;
 		this.wait();
 	}
 
 	public synchronized void startQueue(){
+		isQueueStarted = true;
 		this.notifyAll();
 	}
 
