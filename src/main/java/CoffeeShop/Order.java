@@ -35,7 +35,6 @@ public class Order {
 		this._customer = _customer;
 	}
 
-
 	@Override
 	public String toString() {
 		return _item + ":" + _customer.name;

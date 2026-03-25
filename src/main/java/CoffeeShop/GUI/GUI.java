@@ -5,7 +5,10 @@ import CoffeeShop.Discounts.*;
 import CoffeeShop.Exceptions.InvalidDiscountException;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
@@ -227,6 +230,28 @@ public class GUI {
         JButton reportBtn = new JButton("Generate Report");
         reportBtn.addActionListener(e -> onGenerateReport());
         buttonPanel.add(reportBtn);
+
+        buttonPanel.add(new JLabel("Sim Speed"));
+        JTextField simSpeed = new JTextField(String.valueOf(CoffeeShopManager.SimSpeed), 5);
+        simSpeed.getDocument().addDocumentListener(new DocumentListener() {
+            public void changedUpdate(DocumentEvent e) { update(); }
+            public void removeUpdate(DocumentEvent e) { update(); }
+            public void insertUpdate(DocumentEvent e) { update(); }
+
+            public void update() {
+                try {
+                    String text = simSpeed.getText();
+                    if (!text.isEmpty()) {
+                        CoffeeShopManager.SimSpeed = Float.parseFloat(text);
+                        System.out.println(CoffeeShopManager.SimSpeed);
+                    }
+                } catch (NumberFormatException e) {
+                    // Ignore invalid input while typing
+                }
+            }
+        });
+        buttonPanel.add(simSpeed);
+
 
         autoExitWhenDoneCheck = new JCheckBox("Exit when simulation completes");
         autoExitWhenDoneCheck.setSelected(true);

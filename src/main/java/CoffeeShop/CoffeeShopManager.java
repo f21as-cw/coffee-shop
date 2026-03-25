@@ -25,6 +25,7 @@ public class CoffeeShopManager {
 	public static final String ORDERS_CSV = "orders.csv";
 	public static final String DISCOUNTS_CSV = "discounts.csv";
 	public static String DATA_DIR = "data";
+	public static float SimSpeed = 1.0f;
 
 	public Map<Customer, Bill> CustomerData = new HashMap<>();
 
