@@ -501,7 +501,7 @@ public class GUI {
         try {
             UUID id = manager.addServer();
             refreshServersTable();
-            JOptionPane.showMessageDialog(mainFrame, "Server added: " + id, "Success", JOptionPane.INFORMATION_MESSAGE);
+            //JOptionPane.showMessageDialog(mainFrame, "Server added: " + id, "Success", JOptionPane.INFORMATION_MESSAGE);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(mainFrame, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
