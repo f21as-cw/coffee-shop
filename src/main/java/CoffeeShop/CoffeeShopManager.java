@@ -42,6 +42,7 @@ public class CoffeeShopManager {
     public CoffeeShopManager() {
         this(new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
     }
+
     public CoffeeShopManager(List<Customer> customers, List<Item> items, List<Order> orders) {
         this.AvaliableItems = items;
 
