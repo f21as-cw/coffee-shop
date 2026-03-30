@@ -3,6 +3,7 @@ package CoffeeShop.Server;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import CoffeeShop.Logger;
 import CoffeeShop.Order;
 
 public class OrderQueue {
@@ -15,7 +16,16 @@ public class OrderQueue {
 		queue.add(order);
 	}
 
-	public synchronized Order getOrder() {
+	public synchronized Order getOrder() throws InterruptedException {
 		return queue.poll();
 	}
+
+	public synchronized void isQueueStarted() throws InterruptedException {
+		this.wait();
+	}
+
+	public synchronized void startQueue(){
+		this.notifyAll();
+	}
+
 }

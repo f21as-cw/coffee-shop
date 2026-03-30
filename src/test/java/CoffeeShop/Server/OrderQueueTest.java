@@ -25,9 +25,13 @@ public class OrderQueueTest {
 
         orderQueue.addOrder(order);
 
-        Order retrieved = orderQueue.getOrder();
-        assertNotNull(retrieved);
-        assertEquals(order, retrieved);
+        try {
+            Order retrieved = orderQueue.getOrder();
+            assertNotNull(retrieved);
+            assertEquals(order, retrieved);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
@@ -35,8 +39,12 @@ public class OrderQueueTest {
         Queue<Order> queue = new LinkedBlockingQueue<>();
         OrderQueue orderQueue = new OrderQueue(queue);
 
-        Order retrieved = orderQueue.getOrder();
-        assertNull(retrieved);
+        try {
+            Order retrieved = orderQueue.getOrder();
+            assertNull(retrieved);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
@@ -54,8 +62,12 @@ public class OrderQueueTest {
         orderQueue.addOrder(order1);
         orderQueue.addOrder(order2);
 
-        assertEquals(order1, orderQueue.getOrder());
-        assertEquals(order2, orderQueue.getOrder());
-        assertNull(orderQueue.getOrder());
+        try {
+            assertEquals(order1, orderQueue.getOrder());
+            assertEquals(order2, orderQueue.getOrder());
+            assertNull(orderQueue.getOrder());
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

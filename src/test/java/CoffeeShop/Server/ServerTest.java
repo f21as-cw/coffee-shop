@@ -3,7 +3,6 @@ package CoffeeShop.Server;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
 
@@ -31,6 +30,11 @@ public class ServerTest {
         Server server = new Server(serverId, orderQueue, processedOrders);
         Thread thread = new Thread(server);
         thread.start();
+        // Sleep for 100 ms to ensure the server is waiting for the queue to start.
+        // Without this delay, orderQueue.startQueue() may be called before the server
+        // invokes orderQueue.isQueueStarted(), causing it to wait indefinitely.
+        Thread.sleep(100);
+        orderQueue.startQueue();
         thread.join(2000);
 
         assertEquals(1, processedOrders.getHashMap().get(serverId).size());
@@ -47,7 +51,13 @@ public class ServerTest {
         Server server = new Server(serverId, orderQueue, processedOrders);
         Thread thread = new Thread(server);
         thread.start();
+        // Sleep for 100 ms to ensure the server is waiting for the queue to start.
+        // Without this delay, orderQueue.startQueue() may be called before the server
+        // invokes orderQueue.isQueueStarted(), causing it to wait indefinitely.
+        Thread.sleep(100);
+        orderQueue.startQueue();
         thread.join(1000);
+
 
         assertFalse(thread.isAlive());
     }
@@ -72,13 +82,18 @@ public class ServerTest {
         Server server = new Server(serverId, orderQueue, processedOrders);
         Thread thread = new Thread(server);
         thread.start();
+        // Sleep for 100 ms to ensure the server is waiting for the queue to start.
+        // Without this delay, orderQueue.startQueue() may be called before the server
+        // invokes orderQueue.isQueueStarted(), causing it to wait indefinitely.
+        Thread.sleep(100);
+        orderQueue.startQueue();
         thread.join(3000);
 
         assertEquals(2, processedOrders.getHashMap().get(serverId).size());
     }
 
     @Test
-    void testServerHandlesInterruptionDuringSleep() throws InterruptedException {
+    void testServerHandlesInterruptionDuringOrderSleep() throws InterruptedException {
         Queue<Order> queue = new LinkedBlockingQueue<>();
         OrderQueue orderQueue = new OrderQueue(queue);
         ProcessedOrdersHashMap processedOrders = new ProcessedOrdersHashMap();
@@ -92,8 +107,36 @@ public class ServerTest {
         Server server = new Server(serverId, orderQueue, processedOrders);
         Thread thread = new Thread(server);
         thread.start();
+        // Sleep for 100 ms to ensure the server is waiting for the queue to start.
+        // Without this delay, orderQueue.startQueue() may be called before the server
+        // invokes orderQueue.isQueueStarted(), causing it to wait indefinitely.
+        Thread.sleep(100);
+        orderQueue.startQueue();
 
         Thread.sleep(50);
+        thread.interrupt();
+        thread.join(1000);
+
+        assertFalse(thread.isAlive());
+    }
+
+    @Test
+    void testServerHandlesInterruptionDuringQueueSleep() throws InterruptedException {
+        Queue<Order> queue = new LinkedBlockingQueue<>();
+        OrderQueue orderQueue = new OrderQueue(queue);
+        ProcessedOrdersHashMap processedOrders = new ProcessedOrdersHashMap();
+        UUID serverId = UUID.randomUUID();
+
+        Item item = new Item("DRINK-001", 1.0f, 10);
+        Customer customer = new Customer("John");
+        Order order = new Order(item, customer);
+        orderQueue.addOrder(order);
+
+        Server server = new Server(serverId, orderQueue, processedOrders);
+        Thread thread = new Thread(server);
+        thread.start();
+        Thread.sleep(100);
+
         thread.interrupt();
         thread.join(1000);
 
@@ -125,6 +168,11 @@ public class ServerTest {
 		Thread thread2 = new Thread(server2);
 		thread1.start();
 		thread2.start();
+        // Sleep for 100 ms to ensure the servers are waiting for the queue to start.
+        // Without this delay, orderQueue.startQueue() may be called before the servers
+        // invoke orderQueue.isQueueStarted(), causing them to wait indefinitely.
+        Thread.sleep(100);
+        orderQueue.startQueue();
 		thread1.join(2000);
 		thread2.join(2000);
 

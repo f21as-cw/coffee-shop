@@ -1,15 +1,12 @@
 package CoffeeShop.Server;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import CoffeeShop.Order;
 
 public class ProcessedOrdersHashMap {
 	private final HashMap<UUID, ArrayList<Order>> hash_map;
-
 
 	public ProcessedOrdersHashMap() {
 		this.hash_map = new HashMap<UUID, ArrayList<Order>>();

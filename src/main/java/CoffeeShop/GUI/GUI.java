@@ -8,7 +8,23 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * GUI for Coffee Shop Management System
@@ -19,11 +35,33 @@ public class GUI {
     private CoffeeShopManager manager;
     private JTable customersTable;
     private JTable ordersTable;
+    private JTable itemsTable;
+    private JTable serversTable;
+    private JTable queueTable;
     private JLabel billTotalLabel;
     private JComboBox<Item> itemsCombo;
     private DefaultTableModel customersModel;
     private DefaultTableModel ordersModel;
+    private DefaultTableModel itemsModel;
+    private DefaultTableModel discountsModel;
+    private DefaultTableModel serversModel;
+    private DefaultTableModel queueModel;
+    private JButton startQueueBtn;
+    private JLabel queueStateValueLabel;
+    private JLabel activeServersValueLabel;
+    private JLabel pendingOrdersValueLabel;
+    private JLabel processedOrdersValueLabel;
+    private JCheckBox autoExitWhenDoneCheck;
+    private JTextArea eventLogArea;
+    private javax.swing.Timer serverRefreshTimer;
     private JPanel billDetailsPanel;
+    private boolean queueStarted = false;
+    private boolean existingOrdersQueued = false;
+    private boolean completionReported = false;
+    private Instant simulationStartedAt;
+
+    private static final Path APP_LOG_PATH = Paths.get("app.log");
+    private static final Path REPORT_PATH = Paths.get("simulation_report.txt");
 
     public GUI(CoffeeShopManager manager) {
         this.manager = manager;
@@ -35,6 +73,18 @@ public class GUI {
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mainFrame.setSize(1400, 750);
         mainFrame.setLocationRelativeTo(null);
+        mainFrame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                if (serverRefreshTimer != null) {
+                    serverRefreshTimer.stop();
+                }
+                if (queueStarted && !completionReported) {
+                    writeSimulationReport();
+                }
+                Logger.getInstance().log("GUI window closing.");
+            }
+        });
 
         // Create tabbed pane for main interface
         JTabbedPane tabbedPane = new JTabbedPane();
@@ -46,6 +96,14 @@ public class GUI {
         // Tab 2: Discounts Management
         JPanel discountsPanel = createDiscountsPanel();
         tabbedPane.addTab("Manage Discounts", discountsPanel);
+
+        // Tab 3: Items Management
+        JPanel itemsPanel = createItemsManagementPanel();
+        tabbedPane.addTab("Manage Items", itemsPanel);
+
+        // Tab 4: Server Management
+        JPanel serverPanel = createServerManagementPanel();
+        tabbedPane.addTab("Server Control", serverPanel);
 
         mainFrame.add(tabbedPane);
         mainFrame.setVisible(true);
@@ -72,13 +130,515 @@ public class GUI {
         return panel;
     }
 
+    private JPanel createServerManagementPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JPanel topPanel = new JPanel(new BorderLayout(5, 5));
+        JLabel help = new JLabel("Add servers first, then click Start Queue to let orders be processed.");
+        topPanel.add(help, BorderLayout.NORTH);
+
+        JPanel summaryPanel = new JPanel(new GridLayout(2, 4, 10, 5));
+        summaryPanel.setBorder(BorderFactory.createTitledBorder("Queue Summary"));
+        summaryPanel.add(new JLabel("Queue State:"));
+        queueStateValueLabel = new JLabel("Not started");
+        summaryPanel.add(queueStateValueLabel);
+
+        summaryPanel.add(new JLabel("Active Servers:"));
+        activeServersValueLabel = new JLabel("0");
+        summaryPanel.add(activeServersValueLabel);
+
+        summaryPanel.add(new JLabel("Pending Orders:"));
+        pendingOrdersValueLabel = new JLabel("0");
+        summaryPanel.add(pendingOrdersValueLabel);
+
+        summaryPanel.add(new JLabel("Processed Orders:"));
+        processedOrdersValueLabel = new JLabel("0");
+        summaryPanel.add(processedOrdersValueLabel);
+
+        topPanel.add(summaryPanel, BorderLayout.CENTER);
+        panel.add(topPanel, BorderLayout.NORTH);
+
+        serversModel = new DefaultTableModel(
+            new String[]{"Server ID", "Status", "Progress", "Processed"}, 0
+        ) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        serversTable = new JTable(serversModel);
+        serversTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        queueModel = new DefaultTableModel(
+            new String[]{"Position", "Customer", "Item", "Duration (s)"}, 0
+        ) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        queueTable = new JTable(queueModel);
+        queueTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        JPanel staffPanel = new JPanel(new BorderLayout());
+        staffPanel.setBorder(BorderFactory.createTitledBorder("Serving Staff"));
+        staffPanel.add(new JScrollPane(serversTable), BorderLayout.CENTER);
+
+        JPanel queuePanel = new JPanel(new BorderLayout());
+        queuePanel.setBorder(BorderFactory.createTitledBorder("Orders Waiting In Queue"));
+        queuePanel.add(new JScrollPane(queueTable), BorderLayout.CENTER);
+
+        JPanel livePanel = new JPanel(new GridLayout(1, 2, 10, 10));
+        livePanel.add(staffPanel);
+        livePanel.add(queuePanel);
+
+        eventLogArea = new JTextArea();
+        eventLogArea.setEditable(false);
+        eventLogArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+
+        JPanel logPanel = new JPanel(new BorderLayout());
+        logPanel.setBorder(BorderFactory.createTitledBorder("Live Event Log"));
+        logPanel.add(new JScrollPane(eventLogArea), BorderLayout.CENTER);
+
+        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, livePanel, logPanel);
+        splitPane.setResizeWeight(0.7);
+        panel.add(splitPane, BorderLayout.CENTER);
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
+
+        JButton addServerBtn = new JButton("Add Server");
+        addServerBtn.addActionListener(e -> onAddServer());
+        buttonPanel.add(addServerBtn);
+
+        JButton removeServerBtn = new JButton("Remove Selected Server");
+        removeServerBtn.addActionListener(e -> onRemoveServer());
+        buttonPanel.add(removeServerBtn);
+
+        startQueueBtn = new JButton("Start Queue");
+        startQueueBtn.addActionListener(e -> onStartQueue());
+        buttonPanel.add(startQueueBtn);
+
+        JButton refreshBtn = new JButton("Refresh");
+        refreshBtn.addActionListener(e -> refreshServersTable());
+        buttonPanel.add(refreshBtn);
+
+        JButton reportBtn = new JButton("Generate Report");
+        reportBtn.addActionListener(e -> onGenerateReport());
+        buttonPanel.add(reportBtn);
+
+        autoExitWhenDoneCheck = new JCheckBox("Exit when simulation completes");
+        autoExitWhenDoneCheck.setSelected(true);
+        buttonPanel.add(autoExitWhenDoneCheck);
+
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+
+        refreshServersTable();
+        serverRefreshTimer = new javax.swing.Timer(1000, e -> refreshServersTable());
+        serverRefreshTimer.start();
+
+        return panel;
+    }
+
+    private void refreshServersTable() {
+        if (serversModel == null) {
+            return;
+        }
+
+        String selectedId = null;
+        if (serversTable != null && serversTable.getSelectedRow() >= 0) {
+            selectedId = (String) serversModel.getValueAt(serversTable.getSelectedRow(), 0);
+        }
+
+        serversModel.setRowCount(0);
+
+        Map<UUID, CoffeeShopManager.ServerStatus> progressMap;
+        try {
+            progressMap = manager.getAllProgress();
+        } catch (Exception ex) {
+            return;
+        }
+
+        Map<UUID, Integer> processedByServer = getProcessedOrderCountsByServer();
+        Set<UUID> allServerIds = new HashSet<>();
+        allServerIds.addAll(progressMap.keySet());
+        allServerIds.addAll(processedByServer.keySet());
+
+        List<UUID> ordered = new ArrayList<>(allServerIds);
+        ordered.sort(Comparator.comparing(UUID::toString));
+
+        for (UUID id : ordered) {
+            CoffeeShopManager.ServerStatus status = progressMap.get(id);
+            int processed = processedByServer.getOrDefault(id, 0);
+            serversModel.addRow(new Object[] {
+                id.toString(),
+                status != null ? status.status() : "Stopped",
+                status != null ? String.format("%.0f%%", status.progress() * 100.0f) : "0%",
+                processed
+            });
+        }
+
+        updateServerSummary(progressMap, processedByServer);
+        refreshQueueTable();
+        refreshEventLog();
+        checkSimulationCompletion(progressMap, processedByServer);
+
+        if (selectedId != null) {
+            for (int i = 0; i < serversModel.getRowCount(); i++) {
+                if (selectedId.equals(serversModel.getValueAt(i, 0))) {
+                    serversTable.setRowSelectionInterval(i, i);
+                    break;
+                }
+            }
+        }
+    }
+
+    private void updateServerSummary(
+        Map<UUID, CoffeeShopManager.ServerStatus> progressMap,
+        Map<UUID, Integer> processedByServer
+    ) {
+        int pending = getPendingOrderCount();
+        if (queueStateValueLabel != null) {
+            if (!queueStarted) {
+                queueStateValueLabel.setText("Not started");
+            } else if (pending == 0 && progressMap.isEmpty()) {
+                queueStateValueLabel.setText("Completed");
+            } else {
+                queueStateValueLabel.setText("Started");
+            }
+        }
+        if (activeServersValueLabel != null) {
+            activeServersValueLabel.setText(String.valueOf(progressMap.size()));
+        }
+        if (pendingOrdersValueLabel != null) {
+            pendingOrdersValueLabel.setText(pending >= 0 ? String.valueOf(pending) : "N/A");
+        }
+        if (processedOrdersValueLabel != null) {
+            int totalProcessed = processedByServer.values().stream().mapToInt(Integer::intValue).sum();
+            processedOrdersValueLabel.setText(String.valueOf(totalProcessed));
+        }
+    }
+
+    private Map<UUID, Integer> getProcessedOrderCountsByServer() {
+        Map<UUID, Integer> result = new HashMap<>();
+        try {
+            Field processedOrdersField = CoffeeShopManager.class.getDeclaredField("processedOrders");
+            processedOrdersField.setAccessible(true);
+            Object processedOrdersObj = processedOrdersField.get(manager);
+
+            Method getHashMapMethod = processedOrdersObj.getClass().getMethod("getHashMap");
+            Object rawMap = getHashMapMethod.invoke(processedOrdersObj);
+
+            if (rawMap instanceof Map<?, ?> map) {
+                for (Map.Entry<?, ?> entry : map.entrySet()) {
+                    if (entry.getKey() instanceof UUID id && entry.getValue() instanceof List<?> orders) {
+                        result.put(id, orders.size());
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return result;
+    }
+
+    private int getPendingOrderCount() {
+        try {
+            Field orderQueueField = CoffeeShopManager.class.getDeclaredField("orderQueue");
+            orderQueueField.setAccessible(true);
+            Object orderQueueObj = orderQueueField.get(manager);
+
+            Field queueField = orderQueueObj.getClass().getDeclaredField("queue");
+            queueField.setAccessible(true);
+            Object rawQueue = queueField.get(orderQueueObj);
+
+            if (rawQueue instanceof java.util.Queue<?> queue) {
+                return queue.size();
+            }
+        } catch (Exception ignored) {
+        }
+        return -1;
+    }
+
+    private List<Order> getExistingOrdersNotYetQueued() {
+        List<Order> allOrders = new ArrayList<>();
+        for (Customer customer : manager.getCustomers()) {
+            try {
+                allOrders.addAll(manager.GetCustomerOrders(customer));
+            } catch (Exception ignored) {
+            }
+        }
+
+        Set<Order> pendingSet = new HashSet<>(getPendingOrdersSnapshot());
+        List<Order> toQueue = new ArrayList<>();
+        for (Order order : allOrders) {
+            if (!pendingSet.contains(order)) {
+                toQueue.add(order);
+            }
+        }
+        return toQueue;
+    }
+
+    private List<Order> getPendingOrdersSnapshot() {
+        List<Order> result = new ArrayList<>();
+        try {
+            Field orderQueueField = CoffeeShopManager.class.getDeclaredField("orderQueue");
+            orderQueueField.setAccessible(true);
+            Object orderQueueObj = orderQueueField.get(manager);
+
+            Field queueField = orderQueueObj.getClass().getDeclaredField("queue");
+            queueField.setAccessible(true);
+            Object rawQueue = queueField.get(orderQueueObj);
+
+            if (rawQueue instanceof java.util.Queue<?> queue) {
+                synchronized (queue) {
+                    for (Object obj : queue) {
+                        if (obj instanceof Order order) {
+                            result.add(order);
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return result;
+    }
+
+    private void refreshQueueTable() {
+        if (queueModel == null) {
+            return;
+        }
+
+        queueModel.setRowCount(0);
+        List<Order> pendingOrders = getPendingOrdersSnapshot();
+        for (int i = 0; i < pendingOrders.size(); i++) {
+            Order order = pendingOrders.get(i);
+            queueModel.addRow(new Object[] {
+                i + 1,
+                order.getCustomer().name,
+                order.getItem().getID(),
+                order.getItem().getDuration()
+            });
+        }
+    }
+
+    private void refreshEventLog() {
+        if (eventLogArea == null) {
+            return;
+        }
+
+        if (!Files.exists(APP_LOG_PATH)) {
+            eventLogArea.setText("No app.log file yet.");
+            return;
+        }
+
+        try {
+            List<String> lines = Files.readAllLines(APP_LOG_PATH);
+            int start = Math.max(0, lines.size() - 120);
+            String content = String.join(System.lineSeparator(), lines.subList(start, lines.size()));
+            eventLogArea.setText(content);
+            eventLogArea.setCaretPosition(eventLogArea.getDocument().getLength());
+        } catch (IOException ex) {
+            eventLogArea.setText("Failed to read app.log: " + ex.getMessage());
+        }
+    }
+
+    private void checkSimulationCompletion(
+        Map<UUID, CoffeeShopManager.ServerStatus> progressMap,
+        Map<UUID, Integer> processedByServer
+    ) {
+        if (!queueStarted || completionReported) {
+            return;
+        }
+
+        int pending = getPendingOrderCount();
+        if (pending == 0 && progressMap.isEmpty()) {
+            completionReported = true;
+            Path reportPath = writeSimulationReport();
+            String message = "Queue is empty. Simulation complete.\nReport saved to:\n" + reportPath.toAbsolutePath();
+
+            if (autoExitWhenDoneCheck != null && autoExitWhenDoneCheck.isSelected()) {
+                JOptionPane.showMessageDialog(mainFrame, message, "Simulation Complete", JOptionPane.INFORMATION_MESSAGE);
+                mainFrame.dispose();
+                System.exit(0);
+            } else {
+                JOptionPane.showMessageDialog(mainFrame, message, "Simulation Complete", JOptionPane.INFORMATION_MESSAGE);
+            }
+        }
+    }
+
+    private void onAddServer() {
+        if (queueStarted) {
+            JOptionPane.showMessageDialog(mainFrame, "Queue already started. Add servers before starting queue.", "Warning", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try {
+            UUID id = manager.addServer();
+            refreshServersTable();
+            JOptionPane.showMessageDialog(mainFrame, "Server added: " + id, "Success", JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(mainFrame, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void onRemoveServer() {
+        if (serversTable == null || serversTable.getSelectedRow() < 0) {
+            JOptionPane.showMessageDialog(mainFrame, "Please select a server first", "Warning", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try {
+            String serverId = (String) serversModel.getValueAt(serversTable.getSelectedRow(), 0);
+            manager.removeServer(UUID.fromString(serverId));
+            refreshServersTable();
+            JOptionPane.showMessageDialog(mainFrame, "Server removed: " + serverId, "Success", JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(mainFrame, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void onStartQueue() {
+        if (queueStarted) {
+            JOptionPane.showMessageDialog(mainFrame, "Queue is already started.", "Info", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        if (startQueueBtn != null && !startQueueBtn.isEnabled()) {
+            return;
+        }
+
+        if (startQueueBtn != null) {
+            startQueueBtn.setEnabled(false);
+        }
+        if (queueStateValueLabel != null) {
+            queueStateValueLabel.setText("Preparing queue...");
+        }
+
+        completionReported = false;
+        simulationStartedAt = Instant.now();
+
+        if (!existingOrdersQueued) {
+            existingOrdersQueued = true;
+            List<Order> startupOrders = getExistingOrdersNotYetQueued();
+
+            Thread feeder = new Thread(() -> {
+                for (Order order : startupOrders) {
+                    manager.sumbitOrder(order);
+                    Logger.getInstance().log("Order queued from startup data: " + order);
+                    try {
+                        Thread.sleep(120);
+                    } catch (InterruptedException ignored) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+
+                SwingUtilities.invokeLater(() -> startQueueProcessing(startupOrders.size()));
+            }, "startup-order-feeder");
+            feeder.setDaemon(true);
+            feeder.start();
+            return;
+        }
+
+        startQueueProcessing(0);
+    }
+
+    private void startQueueProcessing(int primedOrders) {
+        try {
+            manager.Start();
+            queueStarted = true;
+            refreshServersTable();
+            String message = "Queue started. Servers can now process queued orders.";
+            if (primedOrders > 0) {
+                message += "\nPrimed startup orders: " + primedOrders;
+            }
+            JOptionPane.showMessageDialog(mainFrame, message, "Success", JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception ex) {
+            if (startQueueBtn != null) {
+                startQueueBtn.setEnabled(true);
+            }
+            JOptionPane.showMessageDialog(mainFrame, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void onGenerateReport() {
+        Path reportPath = writeSimulationReport();
+        JOptionPane.showMessageDialog(
+            mainFrame,
+            "Report saved to:\n" + reportPath.toAbsolutePath(),
+            "Report Generated",
+            JOptionPane.INFORMATION_MESSAGE
+        );
+    }
+
+    private Path writeSimulationReport() {
+        Map<UUID, Integer> processedByServer = getProcessedOrderCountsByServer();
+        int totalProcessed = processedByServer.values().stream().mapToInt(Integer::intValue).sum();
+        int pending = getPendingOrderCount();
+
+        StringBuilder report = new StringBuilder();
+        report.append("Coffee Shop Simulation Report").append(System.lineSeparator());
+        report.append("Generated At: ").append(Instant.now()).append(System.lineSeparator());
+        report.append("Queue State: ").append(queueStarted ? "Started" : "Not started").append(System.lineSeparator());
+        if (simulationStartedAt != null) {
+            long seconds = Duration.between(simulationStartedAt, Instant.now()).getSeconds();
+            report.append("Elapsed Time: ").append(seconds).append("s").append(System.lineSeparator());
+        }
+        report.append("Pending Orders: ").append(pending >= 0 ? pending : "N/A").append(System.lineSeparator());
+        report.append("Processed Orders: ").append(totalProcessed).append(System.lineSeparator());
+        report.append(System.lineSeparator());
+        report.append("Processed by Server:").append(System.lineSeparator());
+
+        List<UUID> serverIds = new ArrayList<>(processedByServer.keySet());
+        serverIds.sort(Comparator.comparing(UUID::toString));
+        for (UUID id : serverIds) {
+            report.append("- ").append(id).append(": ").append(processedByServer.get(id)).append(System.lineSeparator());
+        }
+
+        report.append(System.lineSeparator());
+        report.append("Log file: ").append(APP_LOG_PATH.toAbsolutePath()).append(System.lineSeparator());
+
+        try {
+            Files.writeString(REPORT_PATH, report.toString());
+        } catch (IOException ex) {
+            Logger.getInstance().log("Failed to write simulation report: " + ex.getMessage());
+        }
+
+        return REPORT_PATH;
+    }
+
+    private Item createSimulationOrderItem(Item selectedItem) {
+        int duration = selectedItem.getDuration();
+        String id = selectedItem.getID().toUpperCase();
+
+        if (id.startsWith("DRINK")) {
+            duration = ThreadLocalRandom.current().nextInt(2, 5);
+        } else if (id.startsWith("MAIN") || id.startsWith("SNACK")) {
+            duration = ThreadLocalRandom.current().nextInt(6, 11);
+        }
+
+        return new Item(
+            selectedItem.getID(),
+            selectedItem.getCost(),
+            duration,
+            selectedItem.getDescription(),
+            selectedItem.getIconPath()
+        );
+    }
+
     private JPanel createCustomersPanel() {
         JPanel panel = new JPanel(new BorderLayout(5, 5));
         panel.setBorder(BorderFactory.createTitledBorder("Customers"));
         panel.setPreferredSize(new Dimension(300, 600));
 
         // Create table model
-        customersModel = new DefaultTableModel(new String[]{"Customer Name"}, 0);
+        customersModel = new DefaultTableModel(new String[]{"Customer Name", "Customer ID"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
         customersTable = new JTable(customersModel);
         customersTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         customersTable.addMouseListener(new MouseAdapter() {
@@ -126,6 +686,7 @@ public class GUI {
         topPanel.add(new JLabel("Select Item:"));
         itemsCombo = new JComboBox<>();
         itemsCombo.setPreferredSize(new Dimension(200, 30));
+        itemsCombo.setRenderer(createItemComboRenderer());
         refreshItemsCombo();
         topPanel.add(itemsCombo);
 
@@ -137,8 +698,13 @@ public class GUI {
 
         // Center panel: Orders table
         ordersModel = new DefaultTableModel(
-            new String[]{"Item ID", "Category", "Price", "Description"}, 0
-        );
+            new String[]{"Item ID", "Category", "Price", "Duration (s)", "Description"}, 0
+        ) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
         ordersTable = new JTable(ordersModel);
         ordersTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
@@ -154,6 +720,76 @@ public class GUI {
         panel.add(bottomPanel, BorderLayout.SOUTH);
 
         return panel;
+    }
+
+    private JPanel createItemsManagementPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        itemsModel = new DefaultTableModel(
+            new String[]{"Item ID", "Category", "Price", "Duration (s)", "Description"}, 0
+        ) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        itemsTable = new JTable(itemsModel);
+        itemsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        JScrollPane scrollPane = new JScrollPane(itemsTable);
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
+
+        JButton addItemBtn = new JButton("Add Item");
+        addItemBtn.addActionListener(e -> onAddItem());
+        buttonPanel.add(addItemBtn);
+
+        JButton removeItemBtn = new JButton("Remove Selected Item");
+        removeItemBtn.addActionListener(e -> onRemoveItem());
+        buttonPanel.add(removeItemBtn);
+
+        JButton refreshBtn = new JButton("Refresh");
+        refreshBtn.addActionListener(e -> refreshItemsTable());
+        buttonPanel.add(refreshBtn);
+
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+
+        refreshItemsTable();
+        return panel;
+    }
+
+    private ListCellRenderer<? super Item> createItemComboRenderer() {
+        return new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(
+                JList<?> list,
+                Object value,
+                int index,
+                boolean isSelected,
+                boolean cellHasFocus
+            ) {
+                JLabel label = (JLabel) super.getListCellRendererComponent(
+                    list,
+                    value,
+                    index,
+                    isSelected,
+                    cellHasFocus
+                );
+
+                if (value instanceof Item item) {
+                    label.setText(String.format(
+                        "%s | %s | £%.2f | %ds",
+                        item.getID(),
+                        item.getCategory(),
+                        item.getCost(),
+                        item.getDuration()
+                    ));
+                }
+                return label;
+            }
+        };
     }
 
     private JPanel createBillPanel() {
@@ -216,7 +852,7 @@ public class GUI {
         JPanel tablePanel = new JPanel(new BorderLayout());
         tablePanel.setBorder(BorderFactory.createTitledBorder("Available Discounts"));
 
-        DefaultTableModel discountsModel = new DefaultTableModel(
+        discountsModel = new DefaultTableModel(
             new String[]{"Discount Type", "Details"}, 0
         ) {
             @Override
@@ -305,6 +941,9 @@ public class GUI {
                 if (selectedItem != null) {
                     DiscountPercentage discount = new DiscountPercentage(selectedItem, percentage);
                     manager.CreateDiscount(discount);
+                    if (discountsModel != null) {
+                        refreshDiscountsTable(discountsModel);
+                    }
                     JOptionPane.showMessageDialog(dialog, "Discount created successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
                     dialog.dispose();
                 } else {
@@ -361,6 +1000,9 @@ public class GUI {
                 if (selectedItem != null) {
                     DiscountX4X discount = new DiscountX4X(selectedItem, x, y);
                     manager.CreateDiscount(discount);
+                    if (discountsModel != null) {
+                        refreshDiscountsTable(discountsModel);
+                    }
                     JOptionPane.showMessageDialog(dialog, "Discount created successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
                     dialog.dispose();
                 } else {
@@ -409,7 +1051,7 @@ public class GUI {
         JTextField costField = new JTextField("5.0", 10);
         costPanel.add(costField);
 
-        contentPanel.add(costPanel, BorderLayout.SOUTH);
+        contentPanel.add(costPanel, BorderLayout.NORTH);
 
         // Buttons panel
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -425,6 +1067,9 @@ public class GUI {
                 } else {
                     DiscountMealDeal discount = new DiscountMealDeal(selectedItems, cost);
                     manager.CreateDiscount(discount);
+                    if (discountsModel != null) {
+                        refreshDiscountsTable(discountsModel);
+                    }
                     JOptionPane.showMessageDialog(dialog, "Meal Deal created successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
                     dialog.dispose();
                 }
@@ -482,19 +1127,32 @@ public class GUI {
     }
 
     private void onCustomerSelected() {
-        int selectedRow = customersTable.getSelectedRow();
-        if (selectedRow >= 0) {
-            String customerName = (String) customersModel.getValueAt(selectedRow, 0);
-            Customer selectedCustomer = manager.getCustomers().stream()
-                .filter(c -> c.name.equals(customerName))
-                .findFirst()
-                .orElse(null);
-
-            if (selectedCustomer != null) {
-                refreshOrdersTable(selectedCustomer);
-                refreshBillPanel(selectedCustomer);
-            }
+        Customer selectedCustomer = getSelectedCustomer();
+        if (selectedCustomer != null) {
+            refreshOrdersTable(selectedCustomer);
+            refreshBillPanel(selectedCustomer);
         }
+    }
+
+    private Customer getSelectedCustomer() {
+        int selectedRow = customersTable.getSelectedRow();
+        if (selectedRow < 0) {
+            return null;
+        }
+
+        String customerId = (String) customersModel.getValueAt(selectedRow, 1);
+        return findCustomerById(customerId);
+    }
+
+    private Customer findCustomerById(String customerId) {
+        if (customerId == null || customerId.isBlank()) {
+            return null;
+        }
+
+        return manager.getCustomers().stream()
+            .filter(c -> c.id.toString().equals(customerId))
+            .findFirst()
+            .orElse(null);
     }
 
     private void refreshOrdersTable(Customer customer) {
@@ -509,6 +1167,7 @@ public class GUI {
                 item.getID(),
                 item.getCategory(),
                 String.format("£%.2f", item.getCost()),
+                item.getDuration(),
                 item.getDescription()
             });
         }
@@ -560,7 +1219,7 @@ public class GUI {
 
         List<Customer> customers = manager.getCustomers();
         for (Customer customer : customers) {
-            customersModel.addRow(new Object[]{customer.name});
+            customersModel.addRow(new Object[]{customer.name, customer.id.toString()});
         }
     }
 
@@ -588,30 +1247,23 @@ public class GUI {
     }
 
     private void onRemoveCustomer() {
-        int selectedRow = customersTable.getSelectedRow();
-        if (selectedRow >= 0) {
-            String customerName = (String) customersModel.getValueAt(selectedRow, 0);
-            Customer customerToRemove = manager.getCustomers().stream()
-                .filter(c -> c.name.equals(customerName))
-                .findFirst()
-                .orElse(null);
+        Customer customerToRemove = getSelectedCustomer();
+        if (customerToRemove != null) {
+            String customerName = customerToRemove.name;
+            int confirm = JOptionPane.showConfirmDialog(mainFrame,
+                "Are you sure you want to remove " + customerName + "?",
+                "Confirm Delete",
+                JOptionPane.YES_NO_OPTION);
 
-            if (customerToRemove != null) {
-                int confirm = JOptionPane.showConfirmDialog(mainFrame,
-                    "Are you sure you want to remove " + customerName + "?",
-                    "Confirm Delete",
-                    JOptionPane.YES_NO_OPTION);
-
-                if (confirm == JOptionPane.YES_OPTION) {
-                    try {
-                        manager.RemoveCustomer(customerToRemove);
-                        refreshCustomersTable();
-                        billDetailsPanel.removeAll();
-                        ordersModel.setRowCount(0);
-                        JOptionPane.showMessageDialog(mainFrame, "Customer removed successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-                    } catch (Exception e) {
-                        JOptionPane.showMessageDialog(mainFrame, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                    }
+            if (confirm == JOptionPane.YES_OPTION) {
+                try {
+                    manager.RemoveCustomer(customerToRemove);
+                    refreshCustomersTable();
+                    billDetailsPanel.removeAll();
+                    ordersModel.setRowCount(0);
+                    JOptionPane.showMessageDialog(mainFrame, "Customer removed successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(mainFrame, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         } else {
@@ -620,24 +1272,27 @@ public class GUI {
     }
 
     private void onAddOrder() {
-        int selectedRow = customersTable.getSelectedRow();
-        if (selectedRow >= 0) {
-            String customerName = (String) customersModel.getValueAt(selectedRow, 0);
-            Customer selectedCustomer = manager.getCustomers().stream()
-                .filter(c -> c.name.equals(customerName))
-                .findFirst()
-                .orElse(null);
-
-            if (selectedCustomer != null && itemsCombo.getSelectedItem() != null) {
+        Customer selectedCustomer = getSelectedCustomer();
+        if (selectedCustomer != null) {
+            if (itemsCombo.getSelectedItem() != null) {
                 try {
                     Item selectedItem = (Item) itemsCombo.getSelectedItem();
-                    manager.CreateNewOrder(selectedItem, selectedCustomer);
+                    Item simulationItem = createSimulationOrderItem(selectedItem);
+                    manager.CreateNewOrder(simulationItem, selectedCustomer);
                     refreshOrdersTable(selectedCustomer);
                     refreshBillPanel(selectedCustomer);
-                    JOptionPane.showMessageDialog(mainFrame, "Order added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    refreshServersTable();
+                    JOptionPane.showMessageDialog(
+                        mainFrame,
+                        "Order added successfully! Simulated processing time: " + simulationItem.getDuration() + "s",
+                        "Success",
+                        JOptionPane.INFORMATION_MESSAGE
+                    );
                 } catch (Exception e) {
                     JOptionPane.showMessageDialog(mainFrame, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
+            } else {
+                JOptionPane.showMessageDialog(mainFrame, "Please select an item first", "Warning", JOptionPane.WARNING_MESSAGE);
             }
         } else {
             JOptionPane.showMessageDialog(mainFrame, "Please select a customer first", "Warning", JOptionPane.WARNING_MESSAGE);
@@ -645,29 +1300,22 @@ public class GUI {
     }
 
     private void onRemoveOrder() {
-        int selectedRowCustomer = customersTable.getSelectedRow();
         int selectedRowOrder = ordersTable.getSelectedRow();
 
-        if (selectedRowCustomer >= 0 && selectedRowOrder >= 0) {
-            String customerName = (String) customersModel.getValueAt(selectedRowCustomer, 0);
-            Customer selectedCustomer = manager.getCustomers().stream()
-                .filter(c -> c.name.equals(customerName))
-                .findFirst()
-                .orElse(null);
-
-            if (selectedCustomer != null) {
-                try {
-                    List<Order> orders = manager.GetCustomerOrders(selectedCustomer);
-                    if (selectedRowOrder < orders.size()) {
-                        Order orderToRemove = orders.get(selectedRowOrder);
-                        manager.RemoveOrder(orderToRemove);
-                        refreshOrdersTable(selectedCustomer);
-                        refreshBillPanel(selectedCustomer);
-                        JOptionPane.showMessageDialog(mainFrame, "Order removed successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-                    }
-                } catch (Exception e) {
-                    JOptionPane.showMessageDialog(mainFrame, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        Customer selectedCustomer = getSelectedCustomer();
+        if (selectedCustomer != null && selectedRowOrder >= 0) {
+            try {
+                List<Order> orders = manager.GetCustomerOrders(selectedCustomer);
+                if (selectedRowOrder < orders.size()) {
+                    Order orderToRemove = orders.get(selectedRowOrder);
+                    manager.RemoveOrder(orderToRemove);
+                    refreshOrdersTable(selectedCustomer);
+                    refreshBillPanel(selectedCustomer);
+                    refreshServersTable();
+                    JOptionPane.showMessageDialog(mainFrame, "Order removed successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
                 }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(mainFrame, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         } else {
             JOptionPane.showMessageDialog(mainFrame, "Please select both a customer and an order", "Warning", JOptionPane.WARNING_MESSAGE);
@@ -675,29 +1323,50 @@ public class GUI {
     }
 
     private void onCalculateBill() {
-        int selectedRow = customersTable.getSelectedRow();
-        if (selectedRow >= 0) {
-            String customerName = (String) customersModel.getValueAt(selectedRow, 0);
-            Customer selectedCustomer = manager.getCustomers().stream()
-                .filter(c -> c.name.equals(customerName))
-                .findFirst()
-                .orElse(null);
+        Customer selectedCustomer = getSelectedCustomer();
+        if (selectedCustomer != null) {
+            try {
+                Bill.BillInfo billInfo = manager.GetCustomerBillInfo(selectedCustomer);
+                String totalCost = String.format("£%.2f", billInfo.FinalCost());
+                billTotalLabel.setText("Total: " + totalCost);
 
-            if (selectedCustomer != null) {
+                StringBuilder discountInfo = new StringBuilder("Applied Discounts:\n");
+                for (IDiscount discount : billInfo.DiscountsUsed()) {
+                    discountInfo.append("- ").append(discount.toString()).append("\n");
+                }
+
+                if (billInfo.DiscountsUsed().isEmpty()) {
+                    discountInfo.append("- None\n");
+                }
+
+                JOptionPane.showMessageDialog(mainFrame,
+                    discountInfo.toString() + "\nFinal Total: " + totalCost,
+                    "Bill Calculation",
+                    JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(mainFrame, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } else {
+            JOptionPane.showMessageDialog(mainFrame, "Please select a customer first", "Warning", JOptionPane.WARNING_MESSAGE);
+        }
+    }
+
+    private void onCloseoutCustomer() {
+        Customer selectedCustomer = getSelectedCustomer();
+        if (selectedCustomer != null) {
+            String customerName = selectedCustomer.name;
+            int confirm = JOptionPane.showConfirmDialog(mainFrame,
+                "Close out customer " + customerName + " and remove from system?",
+                "Confirm Closeout",
+                JOptionPane.YES_NO_OPTION);
+
+            if (confirm == JOptionPane.YES_OPTION) {
                 try {
-                    Bill.BillInfo billInfo = manager.GetCustomerBillInfo(selectedCustomer);
-                    String totalCost = String.format("£%.2f", billInfo.FinalCost());
-                    billTotalLabel.setText("Total: " + totalCost);
-
-                    StringBuilder discountInfo = new StringBuilder("Applied Discounts:\n");
-                    for (IDiscount discount : billInfo.DiscountsUsed()) {
-                        discountInfo.append("- ").append(discount.toString()).append("\n");
-                    }
-
-                    JOptionPane.showMessageDialog(mainFrame,
-                        discountInfo.toString() + "\nFinal Total: " + totalCost,
-                        "Bill Calculation",
-                        JOptionPane.INFORMATION_MESSAGE);
+                    manager.CloseoutCustomer(selectedCustomer, true);
+                    refreshCustomersTable();
+                    billDetailsPanel.removeAll();
+                    ordersModel.setRowCount(0);
+                    JOptionPane.showMessageDialog(mainFrame, "Customer closed out successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
                 } catch (Exception e) {
                     JOptionPane.showMessageDialog(mainFrame, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
@@ -707,35 +1376,134 @@ public class GUI {
         }
     }
 
-    private void onCloseoutCustomer() {
-        int selectedRow = customersTable.getSelectedRow();
-        if (selectedRow >= 0) {
-            String customerName = (String) customersModel.getValueAt(selectedRow, 0);
-            Customer selectedCustomer = manager.getCustomers().stream()
-                .filter(c -> c.name.equals(customerName))
-                .findFirst()
-                .orElse(null);
+    private void refreshItemsTable() {
+        if (itemsModel == null) {
+            return;
+        }
 
-            if (selectedCustomer != null) {
-                int confirm = JOptionPane.showConfirmDialog(mainFrame,
-                    "Close out customer " + customerName + " and remove from system?",
-                    "Confirm Closeout",
-                    JOptionPane.YES_NO_OPTION);
+        itemsModel.setRowCount(0);
+        List<Item> items = manager.getAvaliableItems();
+        if (items == null) {
+            return;
+        }
 
-                if (confirm == JOptionPane.YES_OPTION) {
-                    try {
-                        manager.CloseoutCustomer(selectedCustomer, true);
-                        refreshCustomersTable();
-                        billDetailsPanel.removeAll();
-                        ordersModel.setRowCount(0);
-                        JOptionPane.showMessageDialog(mainFrame, "Customer closed out successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-                    } catch (Exception e) {
-                        JOptionPane.showMessageDialog(mainFrame, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                    }
-                }
+        for (Item item : items) {
+            itemsModel.addRow(new Object[] {
+                item.getID(),
+                item.getCategory(),
+                String.format("£%.2f", item.getCost()),
+                item.getDuration(),
+                item.getDescription()
+            });
+        }
+    }
+
+    private void onAddItem() {
+        JTextField idField = new JTextField();
+        JTextField priceField = new JTextField();
+        JTextField durationField = new JTextField();
+        JTextField descriptionField = new JTextField();
+
+        JPanel formPanel = new JPanel(new GridLayout(0, 1, 5, 5));
+        formPanel.add(new JLabel("Item ID (e.g. DRINK-101):"));
+        formPanel.add(idField);
+        formPanel.add(new JLabel("Price (£):"));
+        formPanel.add(priceField);
+        formPanel.add(new JLabel("Duration (seconds):"));
+        formPanel.add(durationField);
+        formPanel.add(new JLabel("Description:"));
+        formPanel.add(descriptionField);
+
+        int result = JOptionPane.showConfirmDialog(
+            mainFrame,
+            formPanel,
+            "Add Item",
+            JOptionPane.OK_CANCEL_OPTION,
+            JOptionPane.PLAIN_MESSAGE
+        );
+
+        if (result != JOptionPane.OK_OPTION) {
+            return;
+        }
+
+        try {
+            String id = idField.getText().trim();
+            float price = Float.parseFloat(priceField.getText().trim());
+            int duration = Integer.parseInt(durationField.getText().trim());
+            String description = descriptionField.getText().trim();
+
+            if (id.isEmpty()) {
+                throw new IllegalArgumentException("Item ID is required.");
             }
-        } else {
-            JOptionPane.showMessageDialog(mainFrame, "Please select a customer first", "Warning", JOptionPane.WARNING_MESSAGE);
+            if (price < 0) {
+                throw new IllegalArgumentException("Price cannot be negative.");
+            }
+            if (duration < 0) {
+                throw new IllegalArgumentException("Duration cannot be negative.");
+            }
+
+            Item newItem = new Item(id, price, duration, description);
+            manager.AddItem(newItem);
+            refreshItemsTable();
+            refreshItemsCombo();
+
+            Customer selectedCustomer = getSelectedCustomer();
+            if (selectedCustomer != null) {
+                refreshOrdersTable(selectedCustomer);
+                refreshBillPanel(selectedCustomer);
+            }
+
+            JOptionPane.showMessageDialog(mainFrame, "Item added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(mainFrame, "Price and duration must be numeric", "Error", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(mainFrame, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void onRemoveItem() {
+        int selectedRow = itemsTable.getSelectedRow();
+        if (selectedRow < 0) {
+            JOptionPane.showMessageDialog(mainFrame, "Please select an item first", "Warning", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String itemId = (String) itemsModel.getValueAt(selectedRow, 0);
+        Item itemToRemove = manager.getAvaliableItems().stream()
+            .filter(i -> i.getID().equals(itemId))
+            .findFirst()
+            .orElse(null);
+
+        if (itemToRemove == null) {
+            JOptionPane.showMessageDialog(mainFrame, "Selected item not found", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(
+            mainFrame,
+            "Remove item " + itemId + " from available items?",
+            "Confirm Remove",
+            JOptionPane.YES_NO_OPTION
+        );
+
+        if (confirm != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        try {
+            manager.RemoveItem(itemToRemove);
+            refreshItemsTable();
+            refreshItemsCombo();
+
+            Customer selectedCustomer = getSelectedCustomer();
+            if (selectedCustomer != null) {
+                refreshOrdersTable(selectedCustomer);
+                refreshBillPanel(selectedCustomer);
+            }
+
+            JOptionPane.showMessageDialog(mainFrame, "Item removed successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(mainFrame, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
