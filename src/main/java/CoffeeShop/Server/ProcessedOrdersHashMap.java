@@ -6,14 +6,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import CoffeeShop.Order;
 
 public class ProcessedOrdersHashMap {
-	private final HashMap<UUID, ArrayList<Order>> hash_map;
+	private HashMap<UUID, ArrayList<Order>> hash_map;
 
 	public ProcessedOrdersHashMap() {
 		this.hash_map = new HashMap<UUID, ArrayList<Order>>();
 	}
 
 	public HashMap<UUID, ArrayList<Order>> getHashMap() {
-		return hash_map;
+		return this.hash_map;
 	}
 
 	public synchronized void addOrder(UUID server_id, Order order) {

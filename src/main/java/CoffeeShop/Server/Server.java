@@ -2,6 +2,7 @@ package CoffeeShop.Server;
 
 import java.util.UUID;
 
+import CoffeeShop.CoffeeShopManager;
 import CoffeeShop.Logger;
 import CoffeeShop.Order;
 
@@ -39,7 +40,7 @@ public class Server implements Runnable {
 					if (Thread.currentThread().isInterrupted()) return;
 					this.progress = (float) i / 100;
 					this.status = "Processing Order " + order.getItem().getID() + " : [" + progress * 100 + "%]";
-					Thread.sleep((dur * 1000L) / 100);
+					Thread.sleep((long) ((dur * 1000L) / (100 * CoffeeShopManager.SimSpeed)));
 				}
 				processedOrders.addOrder(this.id, order);
 				this.progress = 0.0f;

@@ -5,7 +5,10 @@ import CoffeeShop.Discounts.*;
 import CoffeeShop.Exceptions.InvalidDiscountException;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
@@ -228,6 +231,28 @@ public class GUI {
         reportBtn.addActionListener(e -> onGenerateReport());
         buttonPanel.add(reportBtn);
 
+        buttonPanel.add(new JLabel("Sim Speed"));
+        JTextField simSpeed = new JTextField(String.valueOf(CoffeeShopManager.SimSpeed), 5);
+        simSpeed.getDocument().addDocumentListener(new DocumentListener() {
+            public void changedUpdate(DocumentEvent e) { update(); }
+            public void removeUpdate(DocumentEvent e) { update(); }
+            public void insertUpdate(DocumentEvent e) { update(); }
+
+            public void update() {
+                try {
+                    String text = simSpeed.getText();
+                    if (!text.isEmpty()) {
+                        CoffeeShopManager.SimSpeed = Float.parseFloat(text);
+                        System.out.println(CoffeeShopManager.SimSpeed);
+                    }
+                } catch (NumberFormatException e) {
+                    // Ignore invalid input while typing
+                }
+            }
+        });
+        buttonPanel.add(simSpeed);
+
+
         autoExitWhenDoneCheck = new JCheckBox("Exit when simulation completes");
         autoExitWhenDoneCheck.setSelected(true);
         buttonPanel.add(autoExitWhenDoneCheck);
@@ -235,7 +260,7 @@ public class GUI {
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
         refreshServersTable();
-        serverRefreshTimer = new javax.swing.Timer(1000, e -> refreshServersTable());
+        serverRefreshTimer = new javax.swing.Timer(100, e -> refreshServersTable());
         serverRefreshTimer.start();
 
         return panel;
@@ -273,7 +298,7 @@ public class GUI {
             int processed = processedByServer.getOrDefault(id, 0);
             serversModel.addRow(new Object[] {
                 id.toString(),
-                status != null ? status.status() : "Stopped",
+                status != null ? status.status() : "Removed",
                 status != null ? String.format("%.0f%%", status.progress() * 100.0f) : "0%",
                 processed
             });
@@ -468,15 +493,15 @@ public class GUI {
     }
 
     private void onAddServer() {
-        if (queueStarted) {
-            JOptionPane.showMessageDialog(mainFrame, "Queue already started. Add servers before starting queue.", "Warning", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
+//        if (queueStarted) {
+//            JOptionPane.showMessageDialog(mainFrame, "Queue already started. Add servers before starting queue.", "Warning", JOptionPane.WARNING_MESSAGE);
+//            return;
+//        }
 
         try {
             UUID id = manager.addServer();
             refreshServersTable();
-            JOptionPane.showMessageDialog(mainFrame, "Server added: " + id, "Success", JOptionPane.INFORMATION_MESSAGE);
+            //JOptionPane.showMessageDialog(mainFrame, "Server added: " + id, "Success", JOptionPane.INFORMATION_MESSAGE);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(mainFrame, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
@@ -526,12 +551,12 @@ public class GUI {
                 for (Order order : startupOrders) {
                     manager.sumbitOrder(order);
                     Logger.getInstance().log("Order queued from startup data: " + order);
-                    try {
-                        Thread.sleep(120);
-                    } catch (InterruptedException ignored) {
-                        Thread.currentThread().interrupt();
-                        break;
-                    }
+//                    try {
+//                        Thread.sleep(1);
+//                    } catch (InterruptedException ignored) {
+//                        Thread.currentThread().interrupt();
+//                        break;
+//                    }
                 }
 
                 SwingUtilities.invokeLater(() -> startQueueProcessing(startupOrders.size()));
