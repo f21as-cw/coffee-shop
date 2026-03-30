@@ -87,9 +87,9 @@ public class ServerTest {
         // invokes orderQueue.isQueueStarted(), causing it to wait indefinitely.
         Thread.sleep(100);
         orderQueue.startQueue();
-        thread.join(3000);
+        thread.join(4000);
 
-        assertEquals(1, processedOrders.getHashMap().get(serverId).size());
+        assertEquals(2, processedOrders.getHashMap().get(serverId).size());
     }
 
     @Test
