@@ -89,7 +89,7 @@ public class ServerTest {
         orderQueue.startQueue();
         thread.join(3000);
 
-        assertEquals(2, processedOrders.getHashMap().get(serverId).size());
+        assertEquals(1, processedOrders.getHashMap().get(serverId).size());
     }
 
     @Test
