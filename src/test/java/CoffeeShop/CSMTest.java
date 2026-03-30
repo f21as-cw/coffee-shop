@@ -1,10 +1,14 @@
 package CoffeeShop;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import CoffeeShop.Discounts.DiscountMealDeal;
+import CoffeeShop.Discounts.DiscountPercentage;
+import CoffeeShop.Discounts.DiscountX4X;
+import CoffeeShop.Exceptions.CustomerNotFoundException;
+import CoffeeShop.Exceptions.ItemException;
+import CoffeeShop.Exceptions.ItemNotFoundException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,27 +17,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-
-import CoffeeShop.Discounts.DiscountMealDeal;
-import CoffeeShop.Discounts.DiscountPercentage;
-import CoffeeShop.Discounts.DiscountX4X;
-import CoffeeShop.Exceptions.CustomerNotFoundException;
-import CoffeeShop.Exceptions.ItemException;
-import CoffeeShop.Exceptions.ItemNotFoundException;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class CSMTest {
 
+    @TempDir
+    Path tempDir;
     private List<Customer> customers;
     private List<Item> items;
     private List<Order> orders;
     private Item drink;
     private Item snack;
-
-    @TempDir
-    Path tempDir;
 
     @BeforeEach
     void setUp() throws ItemException {
@@ -152,13 +146,13 @@ public class CSMTest {
         CoffeeShopManager manager = new CoffeeShopManager(customers, items, orders);
         Customer nonExistent = new Customer("Unknown");
 
-        assertThrows(ItemNotFoundException.class, () -> manager.CreateNewOrder("MAIN-999", customer.id.toString()));
+        assertThrows(ItemNotFoundException.class, () -> manager.CreateNewOrder("MAIN-999", customer.id().toString()));
         assertThrows(CustomerNotFoundException.class, () -> manager.CreateNewOrder("SNACK-01", UUID.randomUUID().toString()));
 
     }
 
     @Test
-    void CreateNewOrder_WithIDs_Incorrect(){
+    void CreateNewOrder_WithIDs_Incorrect() {
         Customer customer = new Customer("Alice");
         customers.add(customer);
 
@@ -186,7 +180,7 @@ public class CSMTest {
 
         assertEquals(1, manager.CustomerData.size());
         assertTrue(manager.CustomerData.keySet().stream()
-                .anyMatch(c -> c.name.equals("NewCustomer")));
+                .anyMatch(c -> c.name().equals("NewCustomer")));
     }
 
     @Test
@@ -211,6 +205,7 @@ public class CSMTest {
 
         assertThrows(CustomerNotFoundException.class, () -> manager.CloseoutCustomer(new Customer("", UUID.randomUUID()), false));
     }
+
     @Test
     void CloseoutCustomer() throws Exception {
         Customer customer = new Customer("Alice");
@@ -224,7 +219,7 @@ public class CSMTest {
 
 
     @Test
-    void LoadTest(){
+    void LoadTest() {
         CoffeeShopManager.DATA_DIR = "src/test/data";
         CoffeeShopManager csm = new CoffeeShopManager();
         csm.LoadData();
@@ -247,7 +242,7 @@ public class CSMTest {
     }
 
     @Test
-    void SaveTest(){
+    void SaveTest() {
         CoffeeShopManager.DATA_DIR = tempDir.toString();
         CoffeeShopManager csm = new CoffeeShopManager();
         Customer customer1 = csm.CreateCustomer("Bill");
@@ -267,16 +262,16 @@ public class CSMTest {
 
         csm.setAvaliableItems(items);
 
-        csm.CreateNewOrder("DRINK-001", customer1.id.toString());
-        csm.CreateNewOrder("DRINK-003", customer1.id.toString());
-        csm.CreateNewOrder("SNACK-001", customer1.id.toString());
+        csm.CreateNewOrder("DRINK-001", customer1.id().toString());
+        csm.CreateNewOrder("DRINK-003", customer1.id().toString());
+        csm.CreateNewOrder("SNACK-001", customer1.id().toString());
 
-        csm.CreateNewOrder("DRINK-001", customer2.id.toString());
-        csm.CreateNewOrder("MAIN-002", customer2.id.toString());
+        csm.CreateNewOrder("DRINK-001", customer2.id().toString());
+        csm.CreateNewOrder("MAIN-002", customer2.id().toString());
 
-        csm.CreateNewOrder("MAIN-003", customer2.id.toString());
-        csm.CreateNewOrder("SNACK-001", customer2.id.toString());
-        csm.CreateNewOrder("SNACK-001", customer2.id.toString());
+        csm.CreateNewOrder("MAIN-003", customer2.id().toString());
+        csm.CreateNewOrder("SNACK-001", customer2.id().toString());
+        csm.CreateNewOrder("SNACK-001", customer2.id().toString());
 
         csm.CreateDiscount(new DiscountPercentage(items.get(1), 0.2f));
         ArrayList<Item> items1 = new ArrayList<>();
@@ -299,7 +294,6 @@ public class CSMTest {
 
         path = Paths.get(tempDir + "/discounts.csv");
         assertTrue(Files.exists(path), "The discounts CSV file should exist");
-
 
 
     }

@@ -1,16 +1,16 @@
 package CoffeeShop.Server;
 
+import CoffeeShop.Customer;
+import CoffeeShop.Item;
+import CoffeeShop.Order;
+import org.junit.jupiter.api.Test;
+
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.junit.jupiter.api.Test;
-
-import CoffeeShop.Customer;
-import CoffeeShop.Item;
-import CoffeeShop.Order;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class ServerTest {
 
@@ -143,40 +143,40 @@ public class ServerTest {
         assertFalse(thread.isAlive());
     }
 
-	@Test
-	void testMultipleServersWithDifferentIds() throws InterruptedException {
-		Queue<Order> queue = new LinkedBlockingQueue<>();
-		OrderQueue orderQueue = new OrderQueue(queue);
-		ProcessedOrdersHashMap processedOrders = new ProcessedOrdersHashMap();
+    @Test
+    void testMultipleServersWithDifferentIds() throws InterruptedException {
+        Queue<Order> queue = new LinkedBlockingQueue<>();
+        OrderQueue orderQueue = new OrderQueue(queue);
+        ProcessedOrdersHashMap processedOrders = new ProcessedOrdersHashMap();
 
-		UUID serverId1 = UUID.randomUUID();
-		UUID serverId2 = UUID.randomUUID();
+        UUID serverId1 = UUID.randomUUID();
+        UUID serverId2 = UUID.randomUUID();
 
-		Item item = new Item("DRINK-001", 1.0f, 1);
-		Customer customer = new Customer("John");
+        Item item = new Item("DRINK-001", 1.0f, 1);
+        Customer customer = new Customer("John");
 
-		Order order1 = new Order(item, customer);
-		Order order2 = new Order(item, customer);
+        Order order1 = new Order(item, customer);
+        Order order2 = new Order(item, customer);
 
-		Server server1 = new Server(serverId1, orderQueue, processedOrders);
-		Server server2 = new Server(serverId2, orderQueue, processedOrders);
+        Server server1 = new Server(serverId1, orderQueue, processedOrders);
+        Server server2 = new Server(serverId2, orderQueue, processedOrders);
 
-		orderQueue.addOrder(order1);
-		orderQueue.addOrder(order2);
+        orderQueue.addOrder(order1);
+        orderQueue.addOrder(order2);
 
-		Thread thread1 = new Thread(server1);
-		Thread thread2 = new Thread(server2);
-		thread1.start();
-		thread2.start();
+        Thread thread1 = new Thread(server1);
+        Thread thread2 = new Thread(server2);
+        thread1.start();
+        thread2.start();
         // Sleep for 100 ms to ensure the servers are waiting for the queue to start.
         // Without this delay, orderQueue.startQueue() may be called before the servers
         // invoke orderQueue.isQueueStarted(), causing them to wait indefinitely.
         Thread.sleep(100);
         orderQueue.startQueue();
-		thread1.join(2000);
-		thread2.join(2000);
+        thread1.join(2000);
+        thread2.join(2000);
 
-		assertEquals(1, processedOrders.getHashMap().get(serverId1).size());
-		assertEquals(1, processedOrders.getHashMap().get(serverId2).size());
-	}
+        assertEquals(1, processedOrders.getHashMap().get(serverId1).size());
+        assertEquals(1, processedOrders.getHashMap().get(serverId2).size());
+    }
 }

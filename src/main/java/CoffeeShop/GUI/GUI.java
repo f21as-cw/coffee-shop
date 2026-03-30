@@ -1,16 +1,21 @@
 package CoffeeShop.GUI;
 
 import CoffeeShop.*;
-import CoffeeShop.Discounts.*;
+import CoffeeShop.Discounts.DiscountMealDeal;
+import CoffeeShop.Discounts.DiscountPercentage;
+import CoffeeShop.Discounts.DiscountX4X;
+import CoffeeShop.Discounts.IDiscount;
 import CoffeeShop.Exceptions.InvalidDiscountException;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.text.JTextComponent;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -19,14 +24,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -34,8 +33,10 @@ import java.util.concurrent.ThreadLocalRandom;
  * Provides an interface to manage customers, items, orders, and billing
  */
 public class GUI {
+    private static final Path APP_LOG_PATH = Paths.get("app.log");
+    private static final Path REPORT_PATH = Paths.get("simulation_report.txt");
+    private final CoffeeShopManager manager;
     private JFrame mainFrame;
-    private CoffeeShopManager manager;
     private JTable customersTable;
     private JTable ordersTable;
     private JTable itemsTable;
@@ -62,9 +63,6 @@ public class GUI {
     private boolean existingOrdersQueued = false;
     private boolean completionReported = false;
     private Instant simulationStartedAt;
-
-    private static final Path APP_LOG_PATH = Paths.get("app.log");
-    private static final Path REPORT_PATH = Paths.get("simulation_report.txt");
 
     public GUI(CoffeeShopManager manager) {
         this.manager = manager;
@@ -163,7 +161,7 @@ public class GUI {
         panel.add(topPanel, BorderLayout.NORTH);
 
         serversModel = new DefaultTableModel(
-            new String[]{"Server ID", "Status", "Progress", "Processed"}, 0
+                new String[]{"Server ID", "Status", "Progress", "Processed"}, 0
         ) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -175,7 +173,7 @@ public class GUI {
         serversTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         queueModel = new DefaultTableModel(
-            new String[]{"Position", "Customer", "Item", "Duration (s)"}, 0
+                new String[]{"Position", "Customer", "Item", "Duration (s)"}, 0
         ) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -234,9 +232,17 @@ public class GUI {
         buttonPanel.add(new JLabel("Sim Speed"));
         JTextField simSpeed = new JTextField(String.valueOf(CoffeeShopManager.SimSpeed), 5);
         simSpeed.getDocument().addDocumentListener(new DocumentListener() {
-            public void changedUpdate(DocumentEvent e) { update(); }
-            public void removeUpdate(DocumentEvent e) { update(); }
-            public void insertUpdate(DocumentEvent e) { update(); }
+            public void changedUpdate(DocumentEvent e) {
+                update();
+            }
+
+            public void removeUpdate(DocumentEvent e) {
+                update();
+            }
+
+            public void insertUpdate(DocumentEvent e) {
+                update();
+            }
 
             public void update() {
                 try {
@@ -296,11 +302,11 @@ public class GUI {
         for (UUID id : ordered) {
             CoffeeShopManager.ServerStatus status = progressMap.get(id);
             int processed = processedByServer.getOrDefault(id, 0);
-            serversModel.addRow(new Object[] {
-                id.toString(),
-                status != null ? status.status() : "Removed",
-                status != null ? String.format("%.0f%%", status.progress() * 100.0f) : "0%",
-                processed
+            serversModel.addRow(new Object[]{
+                    id.toString(),
+                    status != null ? status.status() : "Removed",
+                    status != null ? String.format("%.0f%%", status.progress() * 100.0f) : "0%",
+                    processed
             });
         }
 
@@ -320,8 +326,8 @@ public class GUI {
     }
 
     private void updateServerSummary(
-        Map<UUID, CoffeeShopManager.ServerStatus> progressMap,
-        Map<UUID, Integer> processedByServer
+            Map<UUID, CoffeeShopManager.ServerStatus> progressMap,
+            Map<UUID, Integer> processedByServer
     ) {
         int pending = getPendingOrderCount();
         if (queueStateValueLabel != null) {
@@ -438,11 +444,11 @@ public class GUI {
         List<Order> pendingOrders = getPendingOrdersSnapshot();
         for (int i = 0; i < pendingOrders.size(); i++) {
             Order order = pendingOrders.get(i);
-            queueModel.addRow(new Object[] {
-                i + 1,
-                order.getCustomer().name,
-                order.getItem().getID(),
-                order.getItem().getDuration()
+            queueModel.addRow(new Object[]{
+                    i + 1,
+                    order.getCustomer().name(),
+                    order.getItem().getID(),
+                    order.getItem().getDuration()
             });
         }
     }
@@ -469,8 +475,8 @@ public class GUI {
     }
 
     private void checkSimulationCompletion(
-        Map<UUID, CoffeeShopManager.ServerStatus> progressMap,
-        Map<UUID, Integer> processedByServer
+            Map<UUID, CoffeeShopManager.ServerStatus> progressMap,
+            Map<UUID, Integer> processedByServer
     ) {
         if (!queueStarted || completionReported) {
             return;
@@ -590,10 +596,10 @@ public class GUI {
     private void onGenerateReport() {
         Path reportPath = writeSimulationReport();
         JOptionPane.showMessageDialog(
-            mainFrame,
-            "Report saved to:\n" + reportPath.toAbsolutePath(),
-            "Report Generated",
-            JOptionPane.INFORMATION_MESSAGE
+                mainFrame,
+                "Report saved to:\n" + reportPath.toAbsolutePath(),
+                "Report Generated",
+                JOptionPane.INFORMATION_MESSAGE
         );
     }
 
@@ -644,11 +650,11 @@ public class GUI {
         }
 
         return new Item(
-            selectedItem.getID(),
-            selectedItem.getCost(),
-            duration,
-            selectedItem.getDescription(),
-            selectedItem.getIconPath()
+                selectedItem.getID(),
+                selectedItem.getCost(),
+                duration,
+                selectedItem.getDescription(),
+                selectedItem.getIconPath()
         );
     }
 
@@ -723,7 +729,7 @@ public class GUI {
 
         // Center panel: Orders table
         ordersModel = new DefaultTableModel(
-            new String[]{"Item ID", "Category", "Price", "Duration (s)", "Description"}, 0
+                new String[]{"Item ID", "Category", "Price", "Duration (s)", "Description"}, 0
         ) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -752,7 +758,7 @@ public class GUI {
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         itemsModel = new DefaultTableModel(
-            new String[]{"Item ID", "Category", "Price", "Duration (s)", "Description"}, 0
+                new String[]{"Item ID", "Category", "Price", "Duration (s)", "Description"}, 0
         ) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -789,27 +795,27 @@ public class GUI {
         return new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(
-                JList<?> list,
-                Object value,
-                int index,
-                boolean isSelected,
-                boolean cellHasFocus
+                    JList<?> list,
+                    Object value,
+                    int index,
+                    boolean isSelected,
+                    boolean cellHasFocus
             ) {
                 JLabel label = (JLabel) super.getListCellRendererComponent(
-                    list,
-                    value,
-                    index,
-                    isSelected,
-                    cellHasFocus
+                        list,
+                        value,
+                        index,
+                        isSelected,
+                        cellHasFocus
                 );
 
                 if (value instanceof Item item) {
                     label.setText(String.format(
-                        "%s | %s | £%.2f | %ds",
-                        item.getID(),
-                        item.getCategory(),
-                        item.getCost(),
-                        item.getDuration()
+                            "%s | %s | £%.2f | %ds",
+                            item.getID(),
+                            item.getCategory(),
+                            item.getCost(),
+                            item.getDuration()
                     ));
                 }
                 return label;
@@ -878,7 +884,7 @@ public class GUI {
         tablePanel.setBorder(BorderFactory.createTitledBorder("Available Discounts"));
 
         discountsModel = new DefaultTableModel(
-            new String[]{"Discount Type", "Details"}, 0
+                new String[]{"Discount Type", "Details"}, 0
         ) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -1132,14 +1138,11 @@ public class GUI {
     }
 
     private String getDiscountDetails(IDiscount discount) {
-        if (discount instanceof DiscountPercentage) {
-            DiscountPercentage d = (DiscountPercentage) discount;
+        if (discount instanceof DiscountPercentage d) {
             return String.format("%s: %.0f%% off", d._item.getID(), d._percentage * 100);
-        } else if (discount instanceof DiscountX4X) {
-            DiscountX4X d = (DiscountX4X) discount;
+        } else if (discount instanceof DiscountX4X d) {
             return String.format("%s: Buy %d, get %d free", d._item.getID(), d._x, d._y);
-        } else if (discount instanceof DiscountMealDeal) {
-            DiscountMealDeal d = (DiscountMealDeal) discount;
+        } else if (discount instanceof DiscountMealDeal d) {
             StringBuilder sb = new StringBuilder("Items: ");
             for (Item item : d._items) {
                 sb.append(item.getID()).append(", ");
@@ -1175,9 +1178,9 @@ public class GUI {
         }
 
         return manager.getCustomers().stream()
-            .filter(c -> c.id.toString().equals(customerId))
-            .findFirst()
-            .orElse(null);
+                .filter(c -> c.id().toString().equals(customerId))
+                .findFirst()
+                .orElse(null);
     }
 
     private void refreshOrdersTable(Customer customer) {
@@ -1189,11 +1192,11 @@ public class GUI {
         for (Order order : orders) {
             Item item = order.getItem();
             ordersModel.addRow(new Object[]{
-                item.getID(),
-                item.getCategory(),
-                String.format("£%.2f", item.getCost()),
-                item.getDuration(),
-                item.getDescription()
+                    item.getID(),
+                    item.getCategory(),
+                    String.format("£%.2f", item.getCost()),
+                    item.getDuration(),
+                    item.getDescription()
             });
         }
     }
@@ -1202,7 +1205,7 @@ public class GUI {
         billDetailsPanel.removeAll();
 
         Bill bill = manager.GetCustomerBill(customer);
-        JLabel customerLabel = new JLabel("Customer: " + customer.name);
+        JLabel customerLabel = new JLabel("Customer: " + customer.name());
         customerLabel.setFont(new Font("Arial", Font.BOLD, 14));
         billDetailsPanel.add(customerLabel);
 
@@ -1244,7 +1247,7 @@ public class GUI {
 
         List<Customer> customers = manager.getCustomers();
         for (Customer customer : customers) {
-            customersModel.addRow(new Object[]{customer.name, customer.id.toString()});
+            customersModel.addRow(new Object[]{customer.name(), customer.id().toString()});
         }
     }
 
@@ -1274,11 +1277,11 @@ public class GUI {
     private void onRemoveCustomer() {
         Customer customerToRemove = getSelectedCustomer();
         if (customerToRemove != null) {
-            String customerName = customerToRemove.name;
+            String customerName = customerToRemove.name();
             int confirm = JOptionPane.showConfirmDialog(mainFrame,
-                "Are you sure you want to remove " + customerName + "?",
-                "Confirm Delete",
-                JOptionPane.YES_NO_OPTION);
+                    "Are you sure you want to remove " + customerName + "?",
+                    "Confirm Delete",
+                    JOptionPane.YES_NO_OPTION);
 
             if (confirm == JOptionPane.YES_OPTION) {
                 try {
@@ -1308,10 +1311,10 @@ public class GUI {
                     refreshBillPanel(selectedCustomer);
                     refreshServersTable();
                     JOptionPane.showMessageDialog(
-                        mainFrame,
-                        "Order added successfully! Simulated processing time: " + simulationItem.getDuration() + "s",
-                        "Success",
-                        JOptionPane.INFORMATION_MESSAGE
+                            mainFrame,
+                            "Order added successfully! Simulated processing time: " + simulationItem.getDuration() + "s",
+                            "Success",
+                            JOptionPane.INFORMATION_MESSAGE
                     );
                 } catch (Exception e) {
                     JOptionPane.showMessageDialog(mainFrame, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
@@ -1365,9 +1368,9 @@ public class GUI {
                 }
 
                 JOptionPane.showMessageDialog(mainFrame,
-                    discountInfo.toString() + "\nFinal Total: " + totalCost,
-                    "Bill Calculation",
-                    JOptionPane.INFORMATION_MESSAGE);
+                        discountInfo + "\nFinal Total: " + totalCost,
+                        "Bill Calculation",
+                        JOptionPane.INFORMATION_MESSAGE);
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(mainFrame, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
@@ -1379,11 +1382,11 @@ public class GUI {
     private void onCloseoutCustomer() {
         Customer selectedCustomer = getSelectedCustomer();
         if (selectedCustomer != null) {
-            String customerName = selectedCustomer.name;
+            String customerName = selectedCustomer.name();
             int confirm = JOptionPane.showConfirmDialog(mainFrame,
-                "Close out customer " + customerName + " and remove from system?",
-                "Confirm Closeout",
-                JOptionPane.YES_NO_OPTION);
+                    "Close out customer " + customerName + " and remove from system?",
+                    "Confirm Closeout",
+                    JOptionPane.YES_NO_OPTION);
 
             if (confirm == JOptionPane.YES_OPTION) {
                 try {
@@ -1413,12 +1416,12 @@ public class GUI {
         }
 
         for (Item item : items) {
-            itemsModel.addRow(new Object[] {
-                item.getID(),
-                item.getCategory(),
-                String.format("£%.2f", item.getCost()),
-                item.getDuration(),
-                item.getDescription()
+            itemsModel.addRow(new Object[]{
+                    item.getID(),
+                    item.getCategory(),
+                    String.format("£%.2f", item.getCost()),
+                    item.getDuration(),
+                    item.getDescription()
             });
         }
     }
@@ -1440,11 +1443,11 @@ public class GUI {
         formPanel.add(descriptionField);
 
         int result = JOptionPane.showConfirmDialog(
-            mainFrame,
-            formPanel,
-            "Add Item",
-            JOptionPane.OK_CANCEL_OPTION,
-            JOptionPane.PLAIN_MESSAGE
+                mainFrame,
+                formPanel,
+                "Add Item",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE
         );
 
         if (result != JOptionPane.OK_OPTION) {
@@ -1495,9 +1498,9 @@ public class GUI {
 
         String itemId = (String) itemsModel.getValueAt(selectedRow, 0);
         Item itemToRemove = manager.getAvaliableItems().stream()
-            .filter(i -> i.getID().equals(itemId))
-            .findFirst()
-            .orElse(null);
+                .filter(i -> i.getID().equals(itemId))
+                .findFirst()
+                .orElse(null);
 
         if (itemToRemove == null) {
             JOptionPane.showMessageDialog(mainFrame, "Selected item not found", "Error", JOptionPane.ERROR_MESSAGE);
@@ -1505,10 +1508,10 @@ public class GUI {
         }
 
         int confirm = JOptionPane.showConfirmDialog(
-            mainFrame,
-            "Remove item " + itemId + " from available items?",
-            "Confirm Remove",
-            JOptionPane.YES_NO_OPTION
+                mainFrame,
+                "Remove item " + itemId + " from available items?",
+                "Confirm Remove",
+                JOptionPane.YES_NO_OPTION
         );
 
         if (confirm != JOptionPane.YES_OPTION) {

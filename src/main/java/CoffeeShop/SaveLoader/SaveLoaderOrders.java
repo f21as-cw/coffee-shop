@@ -1,27 +1,27 @@
 package CoffeeShop.SaveLoader;
 
-import java.util.UUID;
-
 import CoffeeShop.Customer;
 import CoffeeShop.Item;
 import CoffeeShop.Order;
 
+import java.util.UUID;
+
 public class SaveLoaderOrders extends ASaveLoader<Order> {
 
-	public SaveLoaderOrders(String readPath, String writePath)  {
-		super(readPath, writePath);
-	}
+    public SaveLoaderOrders(String readPath, String writePath) {
+        super(readPath, writePath);
+    }
 
 
-	public Order StringToEntity(String str) {
-		String[] values = str.split(",");
+    public Order StringToEntity(String str) {
+        String[] values = str.split(",");
 
-		if (values.length < 2) {
-			// There is missing information
-			return null;
-		}
-		String customerID = values[0];
-		String itemID = values[1];
+        if (values.length < 2) {
+            // There is missing information
+            return null;
+        }
+        String customerID = values[0];
+        String itemID = values[1];
 
 
         Item item = null;
@@ -35,11 +35,11 @@ public class SaveLoaderOrders extends ASaveLoader<Order> {
 
         if (item == null || customer == null) return null;
 
-		return new Order(item, customer);
-	}
+        return new Order(item, customer);
+    }
 
-	public String EntityToString(Order entity) {
-		return entity.getCustomer().id.toString() + "," + entity.getItem().getID();
-	}
+    public String EntityToString(Order entity) {
+        return entity.getCustomer().id().toString() + "," + entity.getItem().getID();
+    }
 
 }

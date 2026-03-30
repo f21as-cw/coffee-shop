@@ -1,13 +1,12 @@
 package CoffeeShop;
 
-import org.junit.jupiter.api.Test;
-
 import CoffeeShop.Exceptions.InvalidItemFormatException;
+import org.junit.jupiter.api.Test;
 
 public class ItemTest {
 
     @Test
-    void createItem(){
+    void createItem() {
 
         Item item = new Item("DRINK-001", 0.5f);
         assert item._ID == "DRINK-001";
@@ -18,8 +17,7 @@ public class ItemTest {
 
         try {
             Item item_error = new Item("ASFSAFAF", 0);
-        }
-        catch (InvalidItemFormatException e){
+        } catch (InvalidItemFormatException e) {
             assert true;
         }
 

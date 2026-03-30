@@ -1,24 +1,23 @@
 package CoffeeShop;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import CoffeeShop.Discounts.DiscountMealDeal;
 import CoffeeShop.Discounts.DiscountPercentage;
 import CoffeeShop.Discounts.DiscountX4X;
 import CoffeeShop.Discounts.IDiscount;
 import CoffeeShop.Exceptions.InvalidDiscountException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 public class BillTest {
 
     Customer _Customer;
 
     @BeforeEach
-    void setupCustomer(){
+    void setupCustomer() {
         _Customer = new Customer("JohnSmith");
     }
 
@@ -28,9 +27,9 @@ public class BillTest {
         Bill bill = new Bill(_Customer);
         Order order1 = new Order(new Item("MAIN-01", 2.50f), _Customer);
         bill.addOrder(order1);
-        Order order2 = new Order(new Item("DRINK-01",5.34f), _Customer);
+        Order order2 = new Order(new Item("DRINK-01", 5.34f), _Customer);
         bill.addOrder(order2);
-        Order order3 = new Order(new Item("SNACK-01",1.29f), _Customer);
+        Order order3 = new Order(new Item("SNACK-01", 1.29f), _Customer);
         bill.addOrder(order3);
 
         assert bill.Orders.size() == 3;
@@ -57,9 +56,9 @@ public class BillTest {
     @Test
     void CostTest1() {
         Bill bill = new Bill(_Customer);
-        bill.addOrder(new Order(new Item("MAIN-01",2.5f), _Customer));
+        bill.addOrder(new Order(new Item("MAIN-01", 2.5f), _Customer));
         bill.addOrder(new Order(new Item("SNACK-01", 5.4f), _Customer));
-        bill.addOrder(new Order(new Item("DRINK-01",6.3f), _Customer));
+        bill.addOrder(new Order(new Item("DRINK-01", 6.3f), _Customer));
         bill.addOrder(new Order(new Item("MAIN-02", 9.3f), _Customer));
         bill.addOrder(new Order(new Item("DRINK-02", 2.4f), _Customer));
         bill.addOrder(new Order(new Item("SNACK-02", 8.4f), _Customer));
@@ -95,12 +94,12 @@ public class BillTest {
     }
 
     @Test
-    void rndCostTest4(){
+    void rndCostTest4() {
         assert TestRandomBill(1000);
     }
 
     @Test
-    void rndCostTest5(){
+    void rndCostTest5() {
         assert TestRandomBill(10000);
     }
 
@@ -111,10 +110,10 @@ public class BillTest {
         List<Item> items = new ArrayList<>(List.of(
                 snack,
                 snack,
-            new Item("MAIN-001", 8.4f),
-            new Item("DRINK-001", 8.5f),
-            new Item("DRINK-002", 1.2f),
-            new Item("SNACK-002", 1.2f)
+                new Item("MAIN-001", 8.4f),
+                new Item("DRINK-001", 8.5f),
+                new Item("DRINK-002", 1.2f),
+                new Item("SNACK-002", 1.2f)
         ));
         for (Item item : items) {
             bill.addOrder(new Order(item, _Customer));

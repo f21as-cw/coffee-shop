@@ -1,12 +1,10 @@
 package CoffeeShop.SaveLoader;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import org.junit.jupiter.api.Test;
-
 import CoffeeShop.Exceptions.SaveLoaderException;
 import CoffeeShop.Exceptions.SaveLoaderRuntimeException;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class SaveLoaderExceptionClassesTest {
 
@@ -16,7 +14,7 @@ public class SaveLoaderExceptionClassesTest {
         SaveLoaderException exception = new SaveLoaderException(message);
 
         assertEquals(message, exception.getMessage());
-        assertTrue(exception instanceof Exception);
+        assertInstanceOf(Exception.class, exception);
     }
 
     @Test
@@ -25,6 +23,6 @@ public class SaveLoaderExceptionClassesTest {
         SaveLoaderRuntimeException exception = new SaveLoaderRuntimeException(message);
 
         assertEquals(message, exception.getMessage());
-        assertTrue(exception instanceof RuntimeException);
+        assertInstanceOf(RuntimeException.class, exception);
     }
 }

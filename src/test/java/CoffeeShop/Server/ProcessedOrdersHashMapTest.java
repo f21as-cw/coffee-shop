@@ -1,13 +1,12 @@
 package CoffeeShop.Server;
 
-import java.util.ArrayList;
-import java.util.UUID;
-
-import org.junit.jupiter.api.Test;
-
 import CoffeeShop.Customer;
 import CoffeeShop.Item;
 import CoffeeShop.Order;
+import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 

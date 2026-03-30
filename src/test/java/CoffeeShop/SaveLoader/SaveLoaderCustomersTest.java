@@ -1,8 +1,10 @@
 package CoffeeShop.SaveLoader;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import CoffeeShop.Customer;
+import CoffeeShop.Exceptions.SaveLoaderException;
+import CoffeeShop.Exceptions.SaveLoaderRuntimeException;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -11,12 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-
-import CoffeeShop.Customer;
-import CoffeeShop.Exceptions.SaveLoaderException;
-import CoffeeShop.Exceptions.SaveLoaderRuntimeException;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class SaveLoaderCustomersTest {
 
@@ -35,10 +32,10 @@ public class SaveLoaderCustomersTest {
         List<Customer> customers = loader.LoadData();
 
         assertEquals(2, customers.size());
-        assertEquals(uuid1, customers.get(0).id);
-        assertEquals("John Doe", customers.get(0).name);
-        assertEquals(uuid2, customers.get(1).id);
-        assertEquals("Jane Smith", customers.get(1).name);
+        assertEquals(uuid1, customers.get(0).id());
+        assertEquals("John Doe", customers.get(0).name());
+        assertEquals(uuid2, customers.get(1).id());
+        assertEquals("Jane Smith", customers.get(1).name());
     }
 
     @Test

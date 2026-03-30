@@ -1,10 +1,11 @@
 package CoffeeShop.SaveLoader;
 
-import java.util.List;
-
 import CoffeeShop.Exceptions.SaveLoaderException;
 
+import java.util.List;
+
 public interface ISaveLoader<T> {
-	List<T> LoadData();
-	void SaveData(List<T> data) throws SaveLoaderException;
+    List<T> LoadData();
+
+    void SaveData(List<T> data) throws SaveLoaderException;
 }

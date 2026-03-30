@@ -1,35 +1,34 @@
 package CoffeeShop.Server;
 
-import java.util.LinkedList;
-import java.util.Queue;
-
-import CoffeeShop.Logger;
 import CoffeeShop.Order;
 
+import java.util.Queue;
+
 public class OrderQueue {
-	Queue<Order> queue;
-	private boolean isQueueStarted = false;
+    Queue<Order> queue;
+    private boolean isQueueStarted = false;
 
-	public OrderQueue(Queue<Order> queue) {
-		this.queue = queue;
-	}
-	public synchronized void addOrder(Order order) {
-		queue.add(order);
-	}
+    public OrderQueue(Queue<Order> queue) {
+        this.queue = queue;
+    }
 
-	public synchronized Order getOrder() throws InterruptedException {
-		return queue.poll();
-	}
+    public synchronized void addOrder(Order order) {
+        queue.add(order);
+    }
 
-	public synchronized void isQueueStarted() throws InterruptedException {
-		if (isQueueStarted)
-				return;
-		this.wait();
-	}
+    public synchronized Order getOrder() throws InterruptedException {
+        return queue.poll();
+    }
 
-	public synchronized void startQueue(){
-		isQueueStarted = true;
-		this.notifyAll();
-	}
+    public synchronized void isQueueStarted() throws InterruptedException {
+        if (isQueueStarted)
+            return;
+        this.wait();
+    }
+
+    public synchronized void startQueue() {
+        isQueueStarted = true;
+        this.notifyAll();
+    }
 
 }

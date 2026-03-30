@@ -1,14 +1,12 @@
 package CoffeeShop.Server;
 
-import java.util.Queue;
-import java.util.UUID;
-import java.util.concurrent.LinkedBlockingQueue;
-
-import org.junit.jupiter.api.Test;
-
 import CoffeeShop.Customer;
 import CoffeeShop.Item;
 import CoffeeShop.Order;
+import org.junit.jupiter.api.Test;
+
+import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import static org.junit.jupiter.api.Assertions.*;
 

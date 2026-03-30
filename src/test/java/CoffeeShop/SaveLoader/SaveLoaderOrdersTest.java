@@ -1,14 +1,13 @@
 package CoffeeShop.SaveLoader;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-
 import CoffeeShop.Customer;
-import CoffeeShop.Item;
 import CoffeeShop.Exceptions.ItemException;
 import CoffeeShop.Exceptions.SaveLoaderException;
 import CoffeeShop.Exceptions.SaveLoaderRuntimeException;
+import CoffeeShop.Item;
 import CoffeeShop.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -42,7 +41,7 @@ public class SaveLoaderOrdersTest {
 
         assertEquals(1, orders.size());
         assertEquals("DRINK-01", orders.get(0).getItem().getID());
-        assertEquals(customerId, orders.get(0).getCustomer().id);
+        assertEquals(customerId, orders.get(0).getCustomer().id());
     }
 
     @Test

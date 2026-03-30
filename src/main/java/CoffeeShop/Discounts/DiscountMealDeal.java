@@ -1,116 +1,116 @@
 package CoffeeShop.Discounts;
 
+import CoffeeShop.Exceptions.InvalidDiscountException;
+import CoffeeShop.Item;
+import CoffeeShop.Order;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import CoffeeShop.Item;
-import CoffeeShop.Order;
-import CoffeeShop.Exceptions.InvalidDiscountException;
-
 public class DiscountMealDeal implements IDiscount {
-	public List<Item> _items;
-	public float _cost;
+    public List<Item> _items;
+    public float _cost;
 
-	public DiscountMealDeal(List<Item> items, float cost) throws InvalidDiscountException {
-		if (items.size() == 0) {
-			throw new InvalidDiscountException(String
-					.format("Expected size of list to be greater than 0, got %d", items.size()));
-		}
-		if (cost <= 0) {
-			throw new InvalidDiscountException(String
-					.format("Expected cost to be greater than 0, got %f", cost));
+    public DiscountMealDeal(List<Item> items, float cost) throws InvalidDiscountException {
+        if (items.size() == 0) {
+            throw new InvalidDiscountException(String
+                    .format("Expected size of list to be greater than 0, got %d", items.size()));
+        }
+        if (cost <= 0) {
+            throw new InvalidDiscountException(String
+                    .format("Expected cost to be greater than 0, got %f", cost));
 
-		}
+        }
 
-		_items = items;
-		_cost = cost;
-	}
+        _items = items;
+        _cost = cost;
+    }
 
-	// Approach
-	// count = _items
-	// .map(i -> orders
-	// NOTE: Is equality the best option? Maybe a subclass
-	// .filter(o -> o.getItem() == i)
-	// .size()
-	// )
-	// .min()
-	// initialCost = _items
-	// .map(i -> i.getCost())
-	// .sum()
-	// discount = (initialCost - _cost) * count
-	@Override
-	public DiscountsData DiscountEval(List<Order> orders) {
-		Map<Item, List<Order>> item2Orders = new HashMap<Item, List<Order>>();
-		for (Item item : _items) {
-			item2Orders.put(item, new LinkedList<Order>());
-		}
+    // Approach
+    // count = _items
+    // .map(i -> orders
+    // NOTE: Is equality the best option? Maybe a subclass
+    // .filter(o -> o.getItem() == i)
+    // .size()
+    // )
+    // .min()
+    // initialCost = _items
+    // .map(i -> i.getCost())
+    // .sum()
+    // discount = (initialCost - _cost) * count
+    @Override
+    public DiscountsData DiscountEval(List<Order> orders) {
+        Map<Item, List<Order>> item2Orders = new HashMap<Item, List<Order>>();
+        for (Item item : _items) {
+            item2Orders.put(item, new LinkedList<Order>());
+        }
 
-		for (Order order : orders) {
-			for (Item item : _items) {
-				if (!order.getItem().equals(item))
-					continue;
-				item2Orders.get(item).add(order);
-			}
-		}
+        for (Order order : orders) {
+            for (Item item : _items) {
+                if (!order.getItem().equals(item))
+                    continue;
+                item2Orders.get(item).add(order);
+            }
+        }
 
-		int count = item2Orders.get(_items.get(0)).size();
-		for (int i = 1; i < _items.size(); i++) {
-			int amount = item2Orders.get(_items.get(i)).size();
-			count = count < amount ? count : amount;
-		}
+        int count = item2Orders.get(_items.get(0)).size();
+        for (int i = 1; i < _items.size(); i++) {
+            int amount = item2Orders.get(_items.get(i)).size();
+            count = count < amount ? count : amount;
+        }
 
-		List<Order> used = new LinkedList<Order>();
-		for (List<Order> order : item2Orders.values()) {
-			for (int i = 0; i < count; i++) {
-				used.add(order.get(i));
-			}
-		}
+        List<Order> used = new LinkedList<Order>();
+        for (List<Order> order : item2Orders.values()) {
+            for (int i = 0; i < count; i++) {
+                used.add(order.get(i));
+            }
+        }
 
-		float initalCost = 0.0f;
-		for (Item i : _items) {
-			initalCost += i.getCost();
-		}
+        float initalCost = 0.0f;
+        for (Item i : _items) {
+            initalCost += i.getCost();
+        }
 
-		float discount = (initalCost - _cost) * count;
+        float discount = (initalCost - _cost) * count;
 
-		return new DiscountsData(used, discount);
-	}
+        return new DiscountsData(used, discount);
+    }
 
-	@Override
-	public String StringToEntity() {
-		return "";
-	}
+    @Override
+    public String StringToEntity() {
+        return "";
+    }
 
-	@Override
-	public String EntityToString() {
-		String str = this.getClass().getName() + "," + discountID.toString() + ",((";
-		for (Item item : _items) {
-			str += item.getID() + ";";
-		}
-		str = str.replaceFirst(".$", "");
-		str += "):" + _cost + ")";
+    @Override
+    public String EntityToString() {
+        String str = this.getClass().getName() + "," + discountID + ",((";
+        for (Item item : _items) {
+            str += item.getID() + ";";
+        }
+        str = str.replaceFirst(".$", "");
+        str += "):" + _cost + ")";
 
-		return str;
-	}
+        return str;
+    }
 
-	@Override
-	public IDiscount linkToRealItems(List<Item> availableItems) {
-		List<Item> linked = availableItems.stream()
-				.filter(this._items::contains)
-				.toList();
+    @Override
+    public IDiscount linkToRealItems(List<Item> availableItems) {
+        List<Item> linked = availableItems.stream()
+                .filter(this._items::contains)
+                .toList();
 
-		// Only return if ALL items were found
-		return (linked.size() == this._items.size())
-				? new DiscountMealDeal(linked, this._cost)
-				: null;
-	}
+        // Only return if ALL items were found
+        return (linked.size() == this._items.size())
+                ? new DiscountMealDeal(linked, this._cost)
+                : null;
+    }
 
-	@Override
-	public String toString() {
-		List<String> ids = _items.stream().map(Item::getID).toList();
-		String itemsStr = String.join(" + ", ids);
-		return String.format("Meal deal: %s = £%.2f", itemsStr, _cost);
-	}
+    @Override
+    public String toString() {
+        List<String> ids = _items.stream().map(Item::getID).toList();
+        String itemsStr = String.join(" + ", ids);
+        return String.format("Meal deal: %s = £%.2f", itemsStr, _cost);
+    }
 }

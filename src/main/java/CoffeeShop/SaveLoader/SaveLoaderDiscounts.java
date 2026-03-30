@@ -1,15 +1,15 @@
 package CoffeeShop.SaveLoader;
 
+import CoffeeShop.Discounts.IDiscount;
+import CoffeeShop.Item;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import CoffeeShop.Item;
-import CoffeeShop.Discounts.IDiscount;
-
-public class SaveLoaderDiscounts extends ASaveLoader<IDiscount>{
+public class SaveLoaderDiscounts extends ASaveLoader<IDiscount> {
 
     public SaveLoaderDiscounts(String readPath, String writePath) {
         super(readPath, writePath);
@@ -36,7 +36,7 @@ public class SaveLoaderDiscounts extends ASaveLoader<IDiscount>{
             Parameter[] params = constructor.getParameters();
             Object[] args = new Object[params.length];
 
-            for (int i = 0; i < params.length; i++){
+            for (int i = 0; i < params.length; i++) {
                 String val = rawVars[i].trim();
                 Class<?> type = params[i].getType();
 
@@ -46,15 +46,14 @@ public class SaveLoaderDiscounts extends ASaveLoader<IDiscount>{
                     else if (type == double.class || type == Double.class) args[i] = Double.parseDouble(val);
                     else if (type == float.class || type == Float.class) args[i] = Float.parseFloat(val);
                     else if (type == Item.class) args[i] = new Item(val);
-                    else if (type == List.class){
+                    else if (type == List.class) {
                         String[] list = val.trim().split(";");
                         List<Item> items = new ArrayList<>();
                         for (String s : list) {
                             items.add(new Item(s));
                         }
                         args[i] = items;
-                    }
-                    else args[i] = val;
+                    } else args[i] = val;
                 } catch (NumberFormatException e) {
                     throw new RuntimeException("Discount loading error");
                 }

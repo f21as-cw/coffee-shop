@@ -1,16 +1,19 @@
 package CoffeeShop.Discounts;
 
-import java.util.List;
-import java.util.UUID;
-
 import CoffeeShop.Item;
 import CoffeeShop.Order;
 
-public interface IDiscount {
-	DiscountsData DiscountEval(List<Order> orders);
-	IDiscount linkToRealItems(List<Item> availableItems);
-	public UUID discountID = UUID.randomUUID();
+import java.util.List;
+import java.util.UUID;
 
-	String StringToEntity();
-	String EntityToString();
+public interface IDiscount {
+    UUID discountID = UUID.randomUUID();
+
+    DiscountsData DiscountEval(List<Order> orders);
+
+    IDiscount linkToRealItems(List<Item> availableItems);
+
+    String StringToEntity();
+
+    String EntityToString();
 }
